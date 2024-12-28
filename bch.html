@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Збереження і відображення даних</title>
+    <!-- Мета теги для PWA -->
+    <meta name="description" content="Програма для збереження і обробки даних">
+    <meta name="theme-color" content="#333333">
+    
+    <!-- Посилання на маніфест -->
+    <link rel="manifest" href="manifest.json">
+    <style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 10px;
+        padding: 0;
+        font-size: 1.2rem; /* Загальний розмір шрифту */
+        line-height: 1.6; /* Збільшений інтерліньяж */
+    }
+    h1, h2 {
+        font-size: 1.5rem; /* Збільшення заголовків */
+        text-align: center;
+    }
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
+    label {
+        font-size: 1.2rem; /* Збільшення розміру шрифту для підписів */
+        margin-bottom: 5px;
+    }
+    input, select, button {
+        font-size: 1.2rem; /* Збільшення розміру тексту у формах */
+        padding: 12px; /* Збільшення полів для введення */
+        margin-bottom: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        width: 100%;
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    #results {
+        margin-top: 20px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        white-space: pre-wrap;
+        font-size: 1.5rem; /* Збільшений розмір тексту результатів */
+        line-height: 1.6; /* Інтерліньяж для читабельності */
+    }
+    @media (max-width: 480px) {
+        body {
+            font-size: 1.3rem; /* Ще більше збільшення для маленьких екранів */
+        }
+        h1, h2 {
+            font-size: 1.4rem;
+        }
+        label, input, select, button {
+            font-size: 1.3rem;
+        }
+        #results {
+            font-size: 1.4rem;
+        }
+    }
+</style>
+</head>
+<body>
+    <h1>Форма введення та аналізу даних</h1>
+
+    <!-- Поле введення екіпажу -->
+    <div class="input-group">
+        <label for="crew-input">Екіпаж:</label>
+        <input type="text" id="crew-input" oninput="saveCrewText()">
+    </div>
+
+    <!-- Поле для вибору ОВП -->
+    <div class="input-group">
+        <label for="ovp-select">Оберіть ОВП:</label>
+        <select id="ovp-select" onchange="saveOvpSelection()">
+            <option value="ОВП">ОВП</option>
+            <option value="ЗВП-1">ЗВП-1</option>
+            <option value="ЗВП-2">ЗВП-2</option>
+            <option value="ЗВП-3">ЗВП-3</option>
+            <option value="ЗВП-4">ЗВП-4</option>
+            <option value="ЗВП-5">ЗВП-5</option>
+            <option value="ЗВП-6">ЗВП-6</option>
+            <option value="ЗВП-7">ЗВП-7</option>
+        </select>
+    </div>
+
+    <!-- Поля введення тексту -->
+    <div id="data-container">
+        <h2>Дані:</h2>
+        <div class="input-group">
+            <label for="text1-input">Текст 1:</label>
+            <input type="text" id="text1-input" oninput="saveTextFields()">
+            <select class="selection" onchange="saveSelections()">
+                <option value="БЧ">БЧ</option>
+                <option value="ППД">ППД</option>
+                <option value="Відсутній">Відсутній</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="text2-input">Текст 2:</label>
+            <input type="text" id="text2-input" oninput="saveTextFields()">
+            <select class="selection" onchange="saveSelections()">
+                <option value="БЧ">БЧ</option>
+                <option value="ППД">ППД</option>
+                <option value="Відсутній">Відсутній</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="text3-input">Текст 3:</label>
+            <input type="text" id="text3-input" oninput="saveTextFields()">
+            <select class="selection" onchange="saveSelections()">
+                <option value="БЧ">БЧ</option>
+                <option value="ППД">ППД</option>
+                <option value="Відсутній">Відсутній</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label for="text4-input">Текст 4:</label>
+            <input type="text" id="text4-input" oninput="saveTextFields()">
+            <select class="selection" onchange="saveSelections()">
+                <option value="БЧ">БЧ</option>
+                <option value="ППД">ППД</option>
+                <option value="Відсутній">Відсутній</option>
+            </select>
+        </div>
+        <button onclick="processResults()">Обробити</button>
+    </div>
+
+    <!-- Виведення результатів -->
+    <div id="results" class="result-group"></div>
+    <button id="copy-button" onclick="copyResults()" style="display: none;">Скопіювати результати</button>
+
+    <script>
+        window.onload = function() {
+            const savedCrewText = localStorage.getItem("crewText");
+            const savedOvpSelection = localStorage.getItem("ovpSelection");
+            const savedTextFields = JSON.parse(localStorage.getItem("textFields"));
+            const savedSelections = JSON.parse(localStorage.getItem("selections"));
+
+            if (savedCrewText) {
+                document.getElementById("crew-input").value = savedCrewText;
+            }
+
+            if (savedOvpSelection) {
+                document.getElementById("ovp-select").value = savedOvpSelection;
+            }
+
+            if (savedTextFields) {
+                document.getElementById("text1-input").value = savedTextFields[0] || "";
+                document.getElementById("text2-input").value = savedTextFields[1] || "";
+                document.getElementById("text3-input").value = savedTextFields[2] || "";
+                document.getElementById("text4-input").value = savedTextFields[3] || "";
+            }
+
+            if (savedSelections) {
+                const selections = document.querySelectorAll(".selection");
+                selections.forEach((select, index) => {
+                    select.value = savedSelections[index] || "БЧ";
+                });
+            }
+        };
+
+        function saveCrewText() {
+            const crewText = document.getElementById("crew-input").value;
+            localStorage.setItem("crewText", crewText);
+        }
+
+        function saveOvpSelection() {
+            const ovpSelection = document.getElementById("ovp-select").value;
+            localStorage.setItem("ovpSelection", ovpSelection);
+        }
+
+        function saveTextFields() {
+            const textFields = [
+                document.getElementById("text1-input").value,
+                document.getElementById("text2-input").value,
+                document.getElementById("text3-input").value,
+                document.getElementById("text4-input").value
+            ];
+            localStorage.setItem("textFields", JSON.stringify(textFields));
+        }
+
+        function saveSelections() {
+            const selections = Array.from(document.querySelectorAll(".selection")).map(select => select.value);
+            localStorage.setItem("selections", JSON.stringify(selections));
+        }
+
+        function processResults() {
+            const crewText = localStorage.getItem("crewText") || "";
+            const ovpSelection = localStorage.getItem("ovpSelection") || "";
+            const textInputs = [
+                document.getElementById("text1-input").value,
+                document.getElementById("text2-input").value,
+                document.getElementById("text3-input").value,
+                document.getElementById("text4-input").value
+            ];
+            const selections = Array.from(document.querySelectorAll(".selection")).map(select => select.value);
+
+            const БЧ = [];
+            const ППД = [];
+            const Відсутній = [];
+
+            textInputs.forEach((text, index) => {
+                const selection = selections[index];
+                if (selection === "БЧ") {
+                    БЧ.push(text);
+                } else if (selection === "ППД") {
+                    ППД.push(text);
+                } else if (selection === "Відсутній") {
+                    Відсутній.push(text);
+                }
+            });
+
+            let resultText = `${crewText} (${ovpSelection})\n`;
+
+            resultText += "На БЧ:\n";
+            resultText += БЧ.length ? БЧ.join("\n") + "\n" : "Немає даних\n";
+
+            resultText += "На ППД:\n";
+            resultText += ППД.length ? ППД.join("\n") + "\n" : "Немає даних\n";
+
+            if (Відсутній.length) {
+                resultText += "Відсутній:\n";
+                resultText += Відсутній.join("\n") + "\n";
+            }
+
+            const resultsContainer = document.getElementById("results");
+            resultsContainer.innerHTML = `<pre>${resultText.trim()}</pre>`;
+            document.getElementById("copy-button").style.display = "block";
+        }
+
+        function copyResults() {
+            const results = document.getElementById("results").innerText;
+            navigator.clipboard.writeText(results)
+                .then(() => {
+                    alert("Результати скопійовано у буфер обміну!");
+                })
+                .catch((err) => {
+                    alert("Помилка копіювання: " + err);
+                });
+        }
+    </script>
+</body>
+</html>

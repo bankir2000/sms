@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Калькулятор витрат палива</title>
+  <!-- Посилання на стилі Tailwind CSS -->
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f4f4f4;
+    }
+
+    .calculator {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        margin-top: 700px;
+    }
+
+    .calculator input[type="text"],
+    .calculator input[type="number"],
+    .calculator input[type="date"] {
+        width: 100%;
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        box-sizing: border-box;
+        font-size: 25px; /* Збільшено розмір шрифту */
+    }
+
+    .calculator button {
+        width: 100%;
+        margin-top: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: #fff;
+        cursor: pointer;
+        font-size: 25px; /* Збільшено розмір шрифту */
+    }
+
+    .calculator button:hover {
+        background-color: #0056b3;
+    }
+
+    #result {
+        font-size: 20px; /* Збільшено розмір шрифту */
+    }
+  .calculator p {
+        font-size: 30px; /* Встановлюємо розмір шрифту для елементів <p> в калькуляторі */
+          color: #0056b3; /* Темно-синій колір */
+    }
+  .calculator label {
+        font-size: 30px; /* Встановлюємо розмір шрифту для елементів <y> в калькуляторі */
+    }
+</style>
+</head>
+<body>
+<div class="calculator p-6 rounded-lg shadow-lg bg-white max-w-lg w-full">
+    <p class="text-xl text-blue-600">Я знайшов найкращий спосіб економити паливо: просто не вмикайте двигун!</p>
+  <label for="date" class="text-xl">Виберіть дату:</label>
+    <input type="date" id="date" value="<?php echo date('Y-m-d'); ?>" class="mt-2 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+    <input type="text" id="crewNumber" placeholder="Номер екіпажу" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+    <input type="number" id="previousFuel" placeholder="Залишок палива на попередній день" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+    <label for="fuelReceived">Приход палива:</label>
+    <input type="number" id="fuelReceived" placeholder="Введіть приход палива" value="0" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+    <input type="number" id="startSpeedometer" placeholder="Спідометр за попередній день" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+    <input type="number" id="endSpeedometer" placeholder="Кінцевий спідометр" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+    <div id="roadTypes">
+        <div>
+            <label for="autoCalculate" class="text-red-500" style="font-size: 30px;">Погоджуюсь на умову 30% траса та 70% бездоріжжя:</label>
+         <input type="checkbox" id="autoCalculate" class="rounded-full h-8 w-8 bg-gray-300 checked:bg-green-500 focus:ring-green-400">
+        </div>
+        <div>
+            <p></p>
+          <label for="highway">Колона+10%:</label>
+            <input type="number" id="highwayDistance" placeholder="Введіть відстань" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+        </div>
+        <div>
+            <label for="street">Траса-15%:</label>
+            <input type="number" id="streetDistance" placeholder="Введіть відстань" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+        </div>
+        <div>
+            <label for="offroad">Польова дорога+30%:</label>
+            <input type="number" id="offroadDistance" placeholder="Введіть відстань" class="mt-4 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0">
+        </div>
+    </div>
+    <button onclick="calculate()">Результат</button>
+    <p id="result"></p> <!-- Результат розміщено тут -->
+<button onclick="copyResult()">Копіювати результат</button>
+       <p></p> <!-- Пустий рядок -->
+            <button onclick="shareResult()">Поширити</button>
+</div>
+<script>
+  // Отримуємо поточний часовий пояс за стандартною локацією браузера
+    var now = new Date();
+
+    // Задаємо часовий пояс на Kyiv, який має зміщення +02:00 для літнього часу
+    var timeZoneOffset = 120; // Зміщення в хвилинах, +02:00 = 2 години * 60 хвилин = 120 хвилин
+
+    // Отримуємо часову мітку, яка відповідає часу в Києві
+    var kievTime = new Date(now.getTime() + (timeZoneOffset * 60 * 1000));
+
+    // Форматуємо дату у форматі YYYY-MM-DD, який відповідає атрибуту value для поля вводу дати
+    var formattedDate = kievTime.toISOString().substr(0, 10);
+
+    // Встановлюємо отриману дату як значення за замовчуванням для поля вводу дати
+    document.getElementById('date').value = formattedDate;
+    // Зберігаємо номер екіпажу при першому введенні
+    var crewNumberInput = document.getElementById('crewNumber');
+    var crewNumber = localStorage.getItem('crewNumber');
+    if (crewNumber) {
+        crewNumberInput.value = crewNumber;
+    }
+    crewNumberInput.addEventListener('change', function() {
+        localStorage.setItem('crewNumber', crewNumberInput.value);
+    });
+ // Перевіряємо, чи є значення endSpeedometer в локальному сховищі
+var startSpeedometerInput = document.getElementById('startSpeedometer');
+var endSpeedometer = localStorage.getItem('endSpeedometer');
+if (endSpeedometer) {
+    // Якщо значення є, присвоюємо його полю вводу startSpeedometerInput
+    startSpeedometerInput.value = endSpeedometer;
+}
+  // Перевіряємо, чи є значення previousFuel в локальному сховищі
+var previousFuelInput = document.getElementById('previousFuel');
+var previousFuel = localStorage.getItem('previousFuel');
+if (previousFuel) {
+    // Якщо значення є, присвоюємо його полю вводу previousFuelInput
+    previousFuelInput.value = previousFuel;
+}
+// Function to format the date to DD-MM-YYYY format
+function formatDate(inputDate) {
+    var dateParts = inputDate.split("-");
+    return dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];
+}
+    function calculate() {
+        var date = document.getElementById('date').value;
+        var crewNumber = document.getElementById('crewNumber').value;
+        var previousFuel = parseFloat(document.getElementById('previousFuel').value);
+        var fuelReceived = parseFloat(document.getElementById('fuelReceived').value);
+        var startSpeedometer = parseFloat(document.getElementById('startSpeedometer').value);
+        var endSpeedometer = parseFloat(document.getElementById('endSpeedometer').value);
+        var difference = endSpeedometer - startSpeedometer;
+
+        var highwayDistance = parseFloat(document.getElementById('highwayDistance').value);
+        var streetDistance = parseFloat(document.getElementById('streetDistance').value);
+        var offroadDistance = parseFloat(document.getElementById('offroadDistance').value);
+
+      // Перевірка, чи введені значення є числовими
+    if (isNaN(startSpeedometer) || isNaN(endSpeedometer)) {
+        alert('Банкір просив завести правильні показники спідометра.');
+        return; // Вихід з функції, якщо дані некоректні
+    }
+      if (isNaN(previousFuel)) {
+        alert('Банкір просив завести числові значення для залишку за попередній день.');
+        return; // Вихід з функції, якщо дані некоректні
+    }
+if (isNaN(fuelReceived)) {
+        alert('Банкір просив завести числові значення "Приход палива" або поставити нуль.');
+        return; // Вихід з функції, якщо дані некоректні
+    }
+      // Перевірка на допустимий діапазон
+if (endSpeedometer < startSpeedometer || (endSpeedometer - startSpeedometer === 1) || (endSpeedometer - startSpeedometer === 2)) {
+    alert('Банкір каже: Кінцеве показання спідометра повинно бути більше за показання спідометра за попередній день, і різниця не повинна бути меншою за 3 км. Будь ласка, перевірте ваші введені дані.');
+    return; // Вихід з функції, якщо дані некоректні
+}
+        // Перевірка на умову та встановлення значень для відповідних полів
+if (document.getElementById('autoCalculate').checked) {
+    highwayDistance = 0;
+    if (difference === 3) {
+        streetDistance = 0;
+        offroadDistance = difference;
+    } else if (difference === 0) {
+        streetDistance = 0;
+        offroadDistance = 0;
+    } else {
+        streetDistance = Math.max(4, Math.round(0.3 * (difference - highwayDistance))); // Заокруглюємо до цілого
+        offroadDistance = Math.round(difference - streetDistance);
+    }
+}
+// Перевірка на умову та встановлення значень для відповідних полів
+    if (!document.getElementById('autoCalculate').checked) {
+        // Перевіряємо, чи введені значення є числовими
+        if (isNaN(highwayDistance) || isNaN(streetDistance) || isNaN(offroadDistance)) {
+            alert('Банкір рекомендує ввести числові значення для відстаней доріг. В разі відсутності такого виду дороги, будь ласка, поставте нуль.');
+            return;
+        }
+    }
+        var totalDistance = highwayDistance + streetDistance + offroadDistance;
+
+        if (difference === totalDistance) {
+            var highwayFuel = Math.round((highwayDistance / 100) * 15.9 + (highwayDistance / 100) * 15.9 * 0.10);
+            var streetFuel = Math.round((streetDistance / 100) * 15.9 - (streetDistance / 100) * 15.9 * 0.15);
+            var offroadFuel = Math.round((offroadDistance / 100) * 15.9 + (offroadDistance / 100) * 15.9 * 0.30);
+
+            var totalFuel = highwayFuel + streetFuel + offroadFuel;
+            var formattedDate = formatDate(date); // Format the date
+            var result = formattedDate + "_№" + crewNumber + "_" + previousFuel + "л_заправка " + fuelReceived + "л_" + endSpeedometer + "_" + difference + "км_колона " + highwayDistance + "км_траса " + streetDistance + "км_бездоріжжя " + offroadDistance + "км_" + totalFuel + "л_" + (previousFuel - totalFuel + fuelReceived) + "л";
+
+            document.getElementById('result').innerText = result;
+        } else {
+            document.getElementById('result').innerText = "Різниця між показаннями спідометра не відповідає сумі відстаней доріг. Будь ласка, перевірте ваші введені дані.";
+          alert('Банкір рекомендує: Різниця між показаннями спідометра не відповідає сумі відстаней доріг. Будь ласка, перевірте ваші введені дані.');
+            return;
+        }
+    }
+// Додамо обробник події для кнопки "Результат"
+document.querySelector('button').addEventListener('click', function() {
+    // Отримуємо значення endSpeedometer
+    var endSpeedometer = parseFloat(document.getElementById('endSpeedometer').value);
+   // Отримуємо значення previousFuel, fuelReceived та totalFuel
+    var previousFuel = parseFloat(document.getElementById('previousFuel').value);
+    var fuelReceived = parseFloat(document.getElementById('fuelReceived').value);
+    var totalFuel = parseFloat(document.getElementById('result').innerText.split("_")[9]);
+
+    // Обчислюємо нове значення і зберігаємо його в локальному сховищі
+    var newPreviousFuel = previousFuel - totalFuel + fuelReceived;
+    localStorage.setItem('previousFuel', newPreviousFuel);
+
+    // При натисканні кнопки також оновлюємо відображення на сторінці
+    document.getElementById('previousFuel').value = newPreviousFuel;
+    
+    // Зберігаємо значення endSpeedometer в локальному сховищі
+    localStorage.setItem('endSpeedometer', endSpeedometer);
+});
+      function copyResult() {
+        var resultText = document.getElementById('result').innerText;
+        var textarea = document.createElement('textarea');
+        textarea.value = resultText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('Результат скопійовано в буфер обміну.');
+    }
+  function shareResult() {
+    var resultText = document.getElementById('result').innerText;
+    var dataForClipboard = { text: resultText };
+
+    if (navigator.share) {
+        navigator.share(dataForClipboard)
+            .then(() => {
+                alert('Успішно відправлено');
+            })
+            .catch((error) => {
+                alert('Помилка відправки: ' + error);
+            });
+    } else {
+        alert("Ваша система не підтримує обмін файлами.");
+    }
+}
+
+
+</script>
+</body>
+</html>
