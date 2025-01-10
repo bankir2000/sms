@@ -4,89 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Збереження і відображення даних</title>
-    <!-- Мета теги для PWA -->
     <meta name="description" content="Програма для збереження і обробки даних">
     <meta name="theme-color" content="#333333">
-    
-    <!-- Посилання на маніфест -->
-    <link rel="manifest" href="manifest.json">
     <style>
-    body {
-        font-family: Arial, sans-serif;
-        margin: 10px;
-        padding: 0;
-        font-size: 1.2rem; /* Загальний розмір шрифту */
-        line-height: 1.6; /* Збільшений інтерліньяж */
-    }
-    h1, h2 {
-        font-size: 1.5rem; /* Збільшення заголовків */
-        text-align: center;
-    }
-    .input-group {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 15px;
-    }
-    label {
-        font-size: 1.2rem; /* Збільшення розміру шрифту для підписів */
-        margin-bottom: 5px;
-    }
-    input, select, button {
-        font-size: 1.2rem; /* Збільшення розміру тексту у формах */
-        padding: 12px; /* Збільшення полів для введення */
-        margin-bottom: 5px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        width: 100%;
-    }
-    button {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        cursor: pointer;
-    }
-    button:hover {
-        background-color: #45a049;
-    }
-    #results {
-        margin-top: 20px;
-        padding: 10px;
-        background-color: #f9f9f9;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        white-space: pre-wrap;
-        font-size: 1.5rem; /* Збільшений розмір тексту результатів */
-        line-height: 1.6; /* Інтерліньяж для читабельності */
-    }
-    @media (max-width: 480px) {
         body {
-            font-size: 1.3rem; /* Ще більше збільшення для маленьких екранів */
+            font-family: Arial, sans-serif;
+            margin: 10px;
+            padding: 0;
+            font-size: 1.2rem;
+            line-height: 1.6;
         }
         h1, h2 {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            text-align: center;
         }
-        label, input, select, button {
-            font-size: 1.3rem;
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        label {
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            font-size: 1.2rem;
+            padding: 12px;
+            margin-bottom: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
         }
         #results {
-            font-size: 1.4rem;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-size: 1.5rem;
+            line-height: 1.6;
         }
-    }
-</style>
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .checkbox-container input {
+            margin-right: 10px;
+        }
+        @media (max-width: 480px) {
+            body {
+                font-size: 1.3rem;
+            }
+            h1, h2 {
+                font-size: 1.4rem;
+            }
+            label, input, select, button {
+                font-size: 1.3rem;
+            }
+            #results {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <h1>Форма введення та аналізу даних</h1>
 
-    <!-- Поле введення екіпажу -->
     <div class="input-group">
         <label for="crew-input">Екіпаж:</label>
         <input type="text" id="crew-input" oninput="saveCrewText()">
+        <div class="checkbox-container">
+            <input type="checkbox" id="shift-complete">
+            <label for="shift-complete">Завершив чергування</label>
+        </div>
     </div>
 
-    <!-- Поле для вибору ОВП -->
     <div class="input-group">
-        <label for="ovp-select">Оберіть ОВП:</label>
+        <label for="ovp-select">Виїзд на позицію:</label>
         <select id="ovp-select" onchange="saveOvpSelection()">
+            <option value=""> </option>
             <option value="ОВП">ОВП</option>
             <option value="ЗВП-1">ЗВП-1</option>
             <option value="ЗВП-2">ЗВП-2</option>
@@ -94,11 +101,10 @@
             <option value="ЗВП-4">ЗВП-4</option>
             <option value="ЗВП-5">ЗВП-5</option>
             <option value="ЗВП-6">ЗВП-6</option>
-            <option value="ЗВП-7">ЗВП-7</option>
+            <option value="Сосновий Бір">Сосновий Бір</option>
         </select>
     </div>
 
-    <!-- Поля введення тексту -->
     <div id="data-container">
         <h2>Дані:</h2>
         <div class="input-group">
@@ -107,7 +113,6 @@
             <select class="selection" onchange="saveSelections()">
                 <option value="БЧ">БЧ</option>
                 <option value="ППД">ППД</option>
-                <option value="Відсутній">Відсутній</option>
             </select>
         </div>
         <div class="input-group">
@@ -116,7 +121,6 @@
             <select class="selection" onchange="saveSelections()">
                 <option value="БЧ">БЧ</option>
                 <option value="ППД">ППД</option>
-                <option value="Відсутній">Відсутній</option>
             </select>
         </div>
         <div class="input-group">
@@ -125,7 +129,6 @@
             <select class="selection" onchange="saveSelections()">
                 <option value="БЧ">БЧ</option>
                 <option value="ППД">ППД</option>
-                <option value="Відсутній">Відсутній</option>
             </select>
         </div>
         <div class="input-group">
@@ -134,13 +137,11 @@
             <select class="selection" onchange="saveSelections()">
                 <option value="БЧ">БЧ</option>
                 <option value="ППД">ППД</option>
-                <option value="Відсутній">Відсутній</option>
             </select>
         </div>
         <button onclick="processResults()">Обробити</button>
     </div>
 
-    <!-- Виведення результатів -->
     <div id="results" class="result-group"></div>
     <button id="copy-button" onclick="copyResults()" style="display: none;">Скопіювати результати</button>
 
@@ -209,33 +210,38 @@
                 document.getElementById("text4-input").value
             ];
             const selections = Array.from(document.querySelectorAll(".selection")).map(select => select.value);
+            const isShiftComplete = document.getElementById("shift-complete").checked;
 
-            const БЧ = [];
-            const ППД = [];
-            const Відсутній = [];
+            let resultText = "";
 
-            textInputs.forEach((text, index) => {
-                const selection = selections[index];
-                if (selection === "БЧ") {
-                    БЧ.push(text);
-                } else if (selection === "ППД") {
-                    ППД.push(text);
-                } else if (selection === "Відсутній") {
-                    Відсутній.push(text);
+            if (isShiftComplete) {
+                resultText = `${crewText} завершив чергування`;
+            } else {
+                const БЧ = [];
+                const ППД = [];
+
+                textInputs.forEach((text, index) => {
+                    const selection = selections[index];
+                    if (selection === "БЧ") {
+                        БЧ.push(text);
+                    } else if (selection === "ППД") {
+                        ППД.push(text);
+                    }
+                });
+
+                resultText = `${crewText} (${ovpSelection})\n`;
+
+                if (БЧ.length) {
+                    resultText += "На БЧ:\n";
+                    resultText += БЧ.join("\n") + "\n";
                 }
-            });
 
-            let resultText = `${crewText} (${ovpSelection})\n`;
+                if (ППД.length) {
+                    resultText += "На ППД:\n";
+                    resultText += ППД.join("\n") + "\n";
+                }
 
-            resultText += "На БЧ:\n";
-            resultText += БЧ.length ? БЧ.join("\n") + "\n" : "Немає даних\n";
-
-            resultText += "На ППД:\n";
-            resultText += ППД.length ? ППД.join("\n") + "\n" : "Немає даних\n";
-
-            if (Відсутній.length) {
-                resultText += "Відсутній:\n";
-                resultText += Відсутній.join("\n") + "\n";
+                resultText += "4.5.0";
             }
 
             const resultsContainer = document.getElementById("results");
