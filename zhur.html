@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма наказу</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input[type="checkbox"] {
+            width: auto;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .reset-button {
+            margin-top: 10px;
+            background-color: #ff4d4d;
+        }
+        .reset-button:hover {
+            background-color: #cc0000;
+        }
+        .result {
+            margin-top: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #e9f7fd;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+        .edit-button {
+            background-color: #ffc107;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .edit-button:hover {
+            background-color: #e0a800;
+        }
+        .save-button {
+            background-color: #28a745;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .save-button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Форма наказу</h1>
+        <form id="orderForm">
+            <div class="form-group">
+                <label for="crew">Екіпаж:</label>
+                <input type="text" id="crew" placeholder="Введіть екіпаж">
+            </div>
+            <div class="form-group">
+                <label for="currentDateTime">Дата і час:</label>
+                <input type="datetime-local" id="currentDateTime">
+            </div>
+            <div class="form-group">
+                <label for="commander">Віддав наказ:</label>
+                <select id="commander"></select>
+                <input type="text" id="newCommander" placeholder="Додати нового командира">
+                <button type="button" id="addCommanderButton">Додати</button>
+                <button type="button" class="edit-button" id="editCommanderList">Редагувати список</button>
+            </div>
+            <div class="form-group">
+                <label for="receiver">Отримав наказ:</label>
+                <select id="receiver"></select>
+                <input type="text" id="newReceiver" placeholder="Додати нового отримувача">
+                <button type="button" id="addReceiverButton">Додати</button>
+                <button type="button" class="edit-button" id="editReceiverList">Редагувати список</button>
+            </div>
+            <div class="form-group">
+                <label for="order">Наказ:</label>
+                <select id="order"></select>
+                <input type="text" id="newOrder" placeholder="Додати новий наказ">
+                <button type="button" id="addOrderButton">Додати наказ</button>
+                <button type="button" class="edit-button" id="editOrderList">Редагувати список</button>
+            </div>
+            <button type="button" id="processButton">Обробити</button>
+        </form>
+
+        <div class="result" id="resultContainer">
+            <h2>Результат:</h2>
+            <ul id="resultList"></ul>
+            <button type="button" class="reset-button" id="resetResultsButton">Обнулення результату</button>
+            <button type="button" id="copyResultsButton">Копіювати результати</button> <!-- Нова кнопка -->
+        </div>
+    </div>
+
+    <script>
+        function setInitialDateTime() {
+            const now = new Date();
+            const formattedDateTime = now.toISOString().slice(0, 16);
+            document.getElementById('currentDateTime').value = formattedDateTime;
+        }
+
+        function loadCommanders() {
+            const commanders = JSON.parse(localStorage.getItem('commanders')) || [];
+            const commanderSelect = document.getElementById('commander');
+            commanderSelect.innerHTML = '';
+            commanders.forEach(commander => {
+                const option = document.createElement('option');
+                option.value = commander;
+                option.textContent = commander;
+                commanderSelect.appendChild(option);
+            });
+        }
+
+        function loadReceivers() {
+            const receivers = JSON.parse(localStorage.getItem('receivers')) || [];
+            const receiverSelect = document.getElementById('receiver');
+            receiverSelect.innerHTML = '';
+            receivers.forEach(receiver => {
+                const option = document.createElement('option');
+                option.value = receiver;
+                option.textContent = receiver;
+                receiverSelect.appendChild(option);
+            });
+        }
+
+        function loadOrders() {
+            const orders = JSON.parse(localStorage.getItem('orders')) || [];
+            const orderSelect = document.getElementById('order');
+            orderSelect.innerHTML = '';
+            orders.forEach(order => {
+                const option = document.createElement('option');
+                option.value = order;
+                option.textContent = order;
+                orderSelect.appendChild(option);
+            });
+        }
+
+        function loadCrew() {
+            const crew = localStorage.getItem('crew') || '';
+            document.getElementById('crew').value = crew;
+        }
+
+        document.getElementById('addCommanderButton').addEventListener('click', function() {
+            const newCommander = document.getElementById('newCommander').value.trim();
+            if (newCommander) {
+                const commanders = JSON.parse(localStorage.getItem('commanders')) || [];
+                if (!commanders.includes(newCommander)) {
+                    commanders.push(newCommander);
+                    localStorage.setItem('commanders', JSON.stringify(commanders));
+                    loadCommanders();
+                }
+            }
+        });
+
+        document.getElementById('addReceiverButton').addEventListener('click', function() {
+            const newReceiver = document.getElementById('newReceiver').value.trim();
+            if (newReceiver) {
+                const receivers = JSON.parse(localStorage.getItem('receivers')) || [];
+                if (!receivers.includes(newReceiver)) {
+                    receivers.push(newReceiver);
+                    localStorage.setItem('receivers', JSON.stringify(receivers));
+                    loadReceivers();
+                }
+            }
+        });
+
+        document.getElementById('addOrderButton').addEventListener('click', function() {
+            const newOrder = document.getElementById('newOrder').value.trim();
+            if (newOrder) {
+                const orders = JSON.parse(localStorage.getItem('orders')) || [];
+                if (!orders.includes(newOrder)) {
+                    orders.push(newOrder);
+                    localStorage.setItem('orders', JSON.stringify(orders));
+                    loadOrders();
+                }
+            }
+        });
+
+        function loadResults() {
+            const results = JSON.parse(localStorage.getItem('results')) || [];
+            const resultList = document.getElementById('resultList');
+            resultList.innerHTML = '';
+            results.forEach((result, index) => {
+                const li = document.createElement('li');
+                li.textContent = result;
+
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Редагувати';
+                editButton.className = 'edit-button';
+                editButton.addEventListener('click', function() {
+                    editResult(index);
+                });
+
+                li.appendChild(editButton);
+                resultList.appendChild(li);
+            });
+        }
+
+        function editResult(index) {
+            const results = JSON.parse(localStorage.getItem('results')) || [];
+            const newResult = prompt("Редагувати результат:", results[index]);
+            if (newResult !== null) {
+                results[index] = newResult;
+                localStorage.setItem('results', JSON.stringify(results));
+                loadResults();
+            }
+        }
+
+        function saveResult(result) {
+            const results = JSON.parse(localStorage.getItem('results')) || [];
+            results.push(result);
+            localStorage.setItem('results', JSON.stringify(results));
+        }
+
+        function formatDateTime(dateTime) {
+            const date = new Date(dateTime);
+            return date.toLocaleString('uk-UA', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            }).replace(',', 'р.');
+        }
+
+        document.getElementById('processButton').addEventListener('click', function() {
+            const dateTime = document.getElementById('currentDateTime').value;
+            const formattedDateTime = formatDateTime(dateTime);
+            const commander = document.getElementById('commander').value;
+            const receiver = document.getElementById('receiver').value;
+            const order = document.getElementById('order').value;
+            const crew = document.getElementById('crew').value;
+
+            if (!commander || !receiver || !order || !crew) {
+                alert('Будь ласка, заповніть всі необхідні поля.');
+                return;
+            }
+
+            const resultText = `${formattedDateTime} Наказ: ${order}, віддав наказ ${commander}, отримав наказ ${receiver}. Повідомлено: ${crew}`;
+
+            saveResult(resultText);
+            loadResults();
+        });
+
+        document.getElementById('resetResultsButton').addEventListener('click', function() {
+            if (confirm('Ви впевнені, що хочете обнулити всі результати?')) {
+                localStorage.removeItem('results');
+                loadResults();
+            }
+        });
+
+        document.getElementById('copyResultsButton').addEventListener('click', function() {
+            const results = JSON.parse(localStorage.getItem('results')) || [];
+            if (results.length === 0) {
+                alert('Немає результатів для копіювання.');
+                return;
+            }
+
+            const resultText = results.join('\n');
+            navigator.clipboard.writeText(resultText).then(() => {
+                alert('Результати скопійовано в буфер обміну.');
+            }).catch(err => {
+                alert('Помилка копіювання: ' + err);
+            });
+        });
+
+        setInitialDateTime();
+        loadCommanders();
+        loadReceivers();
+        loadOrders();
+        loadCrew();
+        loadResults();
+    </script>
+</body>
+</html>
