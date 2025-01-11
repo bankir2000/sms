@@ -53,7 +53,7 @@
         background-color: #0056b3;
     }
 
-    #result {
+    #resultv {
         font-size: 20px; /* Збільшено розмір шрифту */
     }
   .calculator p {
@@ -96,10 +96,16 @@
         </div>
     </div>
     <button onclick="calculate()">Результат</button>
-    <p id="result"></p> <!-- Результат розміщено тут -->
-<button onclick="copyResult()">Копіювати результат</button>
+    <p id="resultv"></p> <!-- Результат розміщено тут -->
+<button onclick="copyResultv()">Копіювати результат</button>
        <p></p> <!-- Пустий рядок -->
-            <button onclick="shareResult()">Поширити</button>
+            <button onclick="shareResultv()">Поширити</button>
+        <!-- Після кнопки "Поширити" додамо архів -->
+<p>Архів:</p>
+<div id="archive" class="mt-4 bg-gray-100 p-4 rounded-md overflow-auto" style="max-height: 200px; font-size: 16px;"></div>
+
+<!-- Кнопка обнулення архіву -->
+<button onclick="clearArchive()">Обнулення архіву</button>
 </div>
 <script>
   // Отримуємо поточний часовий пояс за стандартною локацією браузера
@@ -206,15 +212,22 @@ if (document.getElementById('autoCalculate').checked) {
 
             var totalFuel = highwayFuel + streetFuel + offroadFuel;
             var formattedDate = formatDate(date); // Format the date
-            var result = formattedDate + "_№" + crewNumber + "_" + previousFuel + "л_заправка " + fuelReceived + "л_" + endSpeedometer + "_" + difference + "км_колона " + highwayDistance + "км_траса " + streetDistance + "км_бездоріжжя " + offroadDistance + "км_" + totalFuel + "л_" + (previousFuel - totalFuel + fuelReceived) + "л";
+            var resultv = formattedDate + "_№" + crewNumber + "_" + previousFuel + "л_заправка " + fuelReceived + "л_" + endSpeedometer + "_" + difference + "км_колона " + highwayDistance + "км_траса " + streetDistance + "км_бездоріжжя " + offroadDistance + "км_" + totalFuel + "л_" + (previousFuel - totalFuel + fuelReceived) + "л";
 
-            document.getElementById('result').innerText = result;
+            document.getElementById('resultv').innerText = resultv;
+            saveToArchive(resultv);
         } else {
-            document.getElementById('result').innerText = "Різниця між показаннями спідометра не відповідає сумі відстаней доріг. Будь ласка, перевірте ваші введені дані.";
+            document.getElementById('resultv').innerText = "Різниця між показаннями спідометра не відповідає сумі відстаней доріг. Будь ласка, перевірте ваші введені дані.";
           alert('Банкір рекомендує: Різниця між показаннями спідометра не відповідає сумі відстаней доріг. Будь ласка, перевірте ваші введені дані.');
             return;
-        }
     }
+}
+
+// Завантажуємо архів при завантаженні сторінки
+window.onload = function () {
+    displayArchive();
+};
+    
 // Додамо обробник події для кнопки "Результат"
 document.querySelector('button').addEventListener('click', function() {
     // Отримуємо значення endSpeedometer
@@ -222,7 +235,7 @@ document.querySelector('button').addEventListener('click', function() {
    // Отримуємо значення previousFuel, fuelReceived та totalFuel
     var previousFuel = parseFloat(document.getElementById('previousFuel').value);
     var fuelReceived = parseFloat(document.getElementById('fuelReceived').value);
-    var totalFuel = parseFloat(document.getElementById('result').innerText.split("_")[9]);
+    var totalFuel = parseFloat(document.getElementById('resultv').innerText.split("_")[9]);
 
     // Обчислюємо нове значення і зберігаємо його в локальному сховищі
     var newPreviousFuel = previousFuel - totalFuel + fuelReceived;
@@ -234,19 +247,56 @@ document.querySelector('button').addEventListener('click', function() {
     // Зберігаємо значення endSpeedometer в локальному сховищі
     localStorage.setItem('endSpeedometer', endSpeedometer);
 });
-      function copyResult() {
-        var resultText = document.getElementById('result').innerText;
+    function saveToArchive(resultv) {
+    let archive = JSON.parse(localStorage.getItem('archive')) || [];
+    archive.push(resultv);
+    localStorage.setItem('archive', JSON.stringify(archive));
+    displayArchive();
+}
+
+function displayArchive() {
+    let archive = JSON.parse(localStorage.getItem('archive')) || [];
+    let archiveDiv = document.getElementById('archive');
+    archiveDiv.innerHTML = '';
+    
+    archive.forEach((item, index) => {
+        let div = document.createElement('div');
+        div.classList.add('mb-2');
+        
+        let textarea = document.createElement('textarea');
+        textarea.value = item;
+        textarea.classList.add('w-full', 'p-2', 'border', 'rounded-md');
+        textarea.style.resize = 'none'; // Заборона зміни розміру текстового поля
+        
+        // Зберігаємо зміни при виході з текстового поля
+        textarea.addEventListener('blur', function () {
+            archive[index] = textarea.value;
+            localStorage.setItem('archive', JSON.stringify(archive));
+        });
+        
+        div.appendChild(textarea);
+        archiveDiv.appendChild(div);
+    });
+}
+
+function clearArchive() {
+    localStorage.removeItem('archive');
+    displayArchive();
+}
+
+      function copyResultv() {
+        var resultTextv = document.getElementById('resultv').innerText;
         var textarea = document.createElement('textarea');
-        textarea.value = resultText;
+        textarea.value = resultTextv;
         document.body.appendChild(textarea);
         textarea.select();
         document.execCommand('copy');
         document.body.removeChild(textarea);
         alert('Результат скопійовано в буфер обміну.');
     }
-  function shareResult() {
-    var resultText = document.getElementById('result').innerText;
-    var dataForClipboard = { text: resultText };
+  function shareResultv() {
+    var resultTextv = document.getElementById('resultv').innerText;
+    var dataForClipboard = { text: resultTextv };
 
     if (navigator.share) {
         navigator.share(dataForClipboard)
