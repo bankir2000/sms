@@ -140,7 +140,7 @@
             <h2>Результат:</h2>
             <ul id="resultList"></ul>
             <button type="button" class="reset-button" id="resetResultsButton">Обнулення результату</button>
-            <button type="button" id="copyResultsButton">Копіювати результати</button> <!-- Нова кнопка -->
+            <button type="button" id="copyResultsButton">Копіювати результати</button>
         </div>
     </div>
 
@@ -190,6 +190,36 @@
         function loadCrew() {
             const crew = localStorage.getItem('crew') || '';
             document.getElementById('crew').value = crew;
+        }
+
+        function saveCrew() {
+            const crew = document.getElementById('crew').value;
+            localStorage.setItem('crew', crew);
+        }
+
+        document.getElementById('crew').addEventListener('input', saveCrew);
+
+        function saveSelectedValues() {
+            const receiver = document.getElementById('receiver').value;
+            const order = document.getElementById('order').value;
+
+            localStorage.setItem('selectedReceiver', receiver);
+            localStorage.setItem('selectedOrder', order);
+        }
+
+        document.getElementById('receiver').addEventListener('change', saveSelectedValues);
+        document.getElementById('order').addEventListener('change', saveSelectedValues);
+
+        function restoreSelectedValues() {
+            const savedReceiver = localStorage.getItem('selectedReceiver');
+            const savedOrder = localStorage.getItem('selectedOrder');
+
+            if (savedReceiver) {
+                document.getElementById('receiver').value = savedReceiver;
+            }
+            if (savedOrder) {
+                document.getElementById('order').value = savedOrder;
+            }
         }
 
         document.getElementById('addCommanderButton').addEventListener('click', function() {
@@ -321,6 +351,7 @@
         loadReceivers();
         loadOrders();
         loadCrew();
+        restoreSelectedValues();
         loadResults();
     </script>
 </body>
