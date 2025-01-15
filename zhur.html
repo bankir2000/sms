@@ -108,6 +108,11 @@
                 <label for="crew">Екіпаж:</label>
                 <input type="text" id="crew" placeholder="Введіть екіпаж">
             </div>
+            <!-- Нове поле для населеного пункту -->
+            <div class="form-group">
+                <label for="location">Населений пункт:</label>
+                <input type="text" id="location" placeholder="Введіть населений пункт">
+            </div>
             <div class="form-group">
                 <label for="currentDateTime">Дата і час:</label>
                 <input type="datetime-local" id="currentDateTime">
@@ -192,12 +197,23 @@
             document.getElementById('crew').value = crew;
         }
 
+        function loadLocation() {
+            const location = localStorage.getItem('location') || '';
+            document.getElementById('location').value = location;
+        }
+
         function saveCrew() {
             const crew = document.getElementById('crew').value;
             localStorage.setItem('crew', crew);
         }
 
+        function saveLocation() {
+            const location = document.getElementById('location').value;
+            localStorage.setItem('location', location);
+        }
+
         document.getElementById('crew').addEventListener('input', saveCrew);
+        document.getElementById('location').addEventListener('input', saveLocation);
 
         function saveSelectedValues() {
             const receiver = document.getElementById('receiver').value;
@@ -305,6 +321,12 @@
             }).replace(',', 'р.');
         }
 
+        function formatYesterday() {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            return yesterday.toLocaleDateString('uk-UA');
+        }
+
         document.getElementById('processButton').addEventListener('click', function() {
             const dateTime = document.getElementById('currentDateTime').value;
             const formattedDateTime = formatDateTime(dateTime);
@@ -312,13 +334,14 @@
             const receiver = document.getElementById('receiver').value;
             const order = document.getElementById('order').value;
             const crew = document.getElementById('crew').value;
+            const location = document.getElementById('location').value;
 
-            if (!commander || !receiver || !order || !crew) {
+            if (!commander || !receiver || !order || !crew || !location) {
                 alert('Будь ласка, заповніть всі необхідні поля.');
                 return;
             }
 
-            const resultText = `${formattedDateTime} Наказ: ${order}, віддав наказ ${commander}, отримав наказ ${receiver}. Повідомлено: ${crew}`;
+            const resultText = `${formattedDateTime} Наказ: ${order}, віддав наказ ${commander}, отримав наказ ${receiver}, населений пункт: ${location}. Повідомлено: ${crew}`;
 
             saveResult(resultText);
             loadResults();
@@ -332,13 +355,19 @@
         });
 
         document.getElementById('copyResultsButton').addEventListener('click', function() {
+            const crew = document.getElementById('crew').value;
+            const location = document.getElementById('location').value;
+            const yesterday = formatYesterday();
+            const today = new Date().toLocaleDateString('uk-UA');
             const results = JSON.parse(localStorage.getItem('results')) || [];
+
             if (results.length === 0) {
                 alert('Немає результатів для копіювання.');
                 return;
             }
 
-            const resultText = results.join('\n');
+            const resultText = `${crew} н.п. ${location}\nПеріод: ${yesterday} - ${today}\nВиконання завдань:\n` + results.join('\n');
+
             navigator.clipboard.writeText(resultText).then(() => {
                 alert('Результати скопійовано в буфер обміну.');
             }).catch(err => {
@@ -351,6 +380,7 @@
         loadReceivers();
         loadOrders();
         loadCrew();
+        loadLocation();  // Завантажуємо населений пункт
         restoreSelectedValues();
         loadResults();
     </script>
