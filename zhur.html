@@ -191,7 +191,45 @@
                 orderSelect.appendChild(option);
             });
         }
+function editList(type) {
+            const items = JSON.parse(localStorage.getItem(type)) || [];
+            const editedItems = prompt("Редагуйте список (елементи через кому):", items.join(', '));
+            if (editedItems !== null) {
+                const newItems = editedItems.split(',').map(item => item.trim()).filter(item => item !== '');
+                localStorage.setItem(type, JSON.stringify(newItems));
+                if (type === 'commanders') {
+                    loadCommanders();
+                } else if (type === 'receivers') {
+                    loadReceivers();
+                } else if (type === 'orders') {
+                    loadOrders();
+                }
+            }
+        }
 
+        document.getElementById('editCommanderList').addEventListener('click', function() {
+            editList('commanders');
+        });
+
+        document.getElementById('editReceiverList').addEventListener('click', function() {
+            editList('receivers');
+        });
+
+        document.getElementById('editOrderList').addEventListener('click', function() {
+            editList('orders');
+        });
+
+        document.getElementById('addCommanderButton').addEventListener('click', function() {
+            const newCommander = document.getElementById('newCommander').value.trim();
+            if (newCommander) {
+                const commanders = JSON.parse(localStorage.getItem('commanders')) || [];
+                if (!commanders.includes(newCommander)) {
+                    commanders.push(newCommander);
+                    localStorage.setItem('commanders', JSON.stringify(commanders));
+                    loadCommanders();
+                }
+            }
+        });
         function loadCrew() {
             const crew = localStorage.getItem('crew') || '';
             document.getElementById('crew').value = crew;
