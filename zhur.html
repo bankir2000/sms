@@ -404,7 +404,7 @@ function editList(type) {
                 return;
             }
 
-            const resultText = `${crew} н.п. ${location}\nПеріод: ${yesterday} - ${today}\nВиконання завдань:\n` + results.join('\n');
+            const resultText = `${crew} 4.5.0 н.п. ${location}\nПеріод: ${yesterday} - ${today}\nВиконання завдань:\n` + results.join('\n');
 
             navigator.clipboard.writeText(resultText).then(() => {
                 alert('Результати скопійовано в буфер обміну.');
