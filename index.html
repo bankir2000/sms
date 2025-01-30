@@ -7,29 +7,30 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 2rem;
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f7f7f7;
+            background-image: url('https://example.com/background-image.jpg'); /* Замінити на фон з ППО */
+            background-size: cover;
+            background-position: center;
+            color: #ffffff;
         }
         .form-container {
             text-align: center;
-            background: #ffffff;
-            border: 2px solid #ddd;
+            background: rgba(0, 0, 0, 0.8); /* Прозорий чорний фон */
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
             padding: 20px 30px;
             width: 90%;
             max-width: 400px;
         }
         h2 {
-            font-size: 2.5rem;
+            font-size: 2rem;
             margin-bottom: 20px;
-            color: #333;
+            color: #00ff00; /* Зелений колір для військової тематики */
         }
         .option {
             margin: 15px 0;
@@ -37,22 +38,24 @@
         .option label {
             cursor: pointer;
             display: block;
-            padding: 10px;
-            background: #f0f0f0;
-            border: 1px solid #ccc;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1); /* Легкий білий фон */
+            border: 1px solid #00ff00;
             border-radius: 5px;
+            color: #ffffff;
+            font-size: 1.2rem;
             transition: background-color 0.3s, transform 0.2s;
         }
         .option label:hover {
-            background-color: #e0e0e0;
-            transform: scale(1.02);
+            background-color: rgba(0, 255, 0, 0.2);
+            transform: scale(1.05);
         }
         input[type="radio"] {
             display: none;
         }
         input[type="radio"]:checked + label {
-            background-color: #d1e7ff;
-            border-color: #007bff;
+            background-color: rgba(0, 255, 0, 0.4);
+            border-color: #ffffff;
         }
     </style>
 </head>
