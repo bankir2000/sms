@@ -74,13 +74,17 @@
             <input type="radio" id="zhur" name="option" value="./zhur.html">
             <label for="zhur">Журнал</label>
         </div>
+        <div class="option">
+            <input type="radio" id="ppo_sms" name="option" value="https://bankir2000.github.io/ppo/">
+            <label for="ppo_sms">ППО СМС</label>
+        </div>
     </div>
 
     <script>
         document.querySelectorAll('input[name="option"]').forEach(option => {
             option.addEventListener('change', function() {
                 if (this.checked) {
-                    window.location.href = this.value; // Перехід на вибраний HTML
+                    window.location.href = this.value; // Перехід на вибраний HTML або зовнішнє посилання
                 }
             });
         });
