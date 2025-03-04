@@ -152,6 +152,7 @@
     <script>
         function setInitialDateTime() {
             const now = new Date();
+            now.setHours(now.getHours() + 2); // Додаємо 2 години
             const formattedDateTime = now.toISOString().slice(0, 16);
             document.getElementById('currentDateTime').value = formattedDateTime;
         }
