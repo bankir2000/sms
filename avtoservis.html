@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Повний сервісний трекер (виправлено)</title>
+  <style>
+    :root {
+      --bg: #0f172a; --card: #111827; --muted: #94a3b8; --text: #e5e7eb; --accent: #22c55e;
+      --warn: #f59e0b; --danger: #ef4444; --blue: #3b82f6; --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body { margin: 0; background: linear-gradient(180deg, #0b1024, #0f172a 40%); color: var(--text);
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans"; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 18px; }
+    h1 { margin: 10px 0 18px; font-weight: 800; letter-spacing: .3px; }
+    h2 { margin: 0 0 12px; font-weight: 700; }
+    .sub { color: var(--muted); font-size: .95rem; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+    @media (min-width: 920px) { .grid { grid-template-columns: 1.2fr .8fr; } }
+    .card { background: rgba(17,24,39,.8); border: 1px solid rgba(148,163,184,.15); border-radius: 16px; box-shadow: var(--shadow); padding: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    label { font-size: .85rem; color: var(--muted); }
+    input, select, textarea { width: 100%; background: #0b1220; color: var(--text); border: 1px solid rgba(148,163,184,.2);
+      padding: 10px 12px; border-radius: 10px; outline: none; transition: border .2s, box-shadow .2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+    button { background: linear-gradient(180deg, #2563eb, #1d4ed8); color: white; border: 0; border-radius: 12px;
+      padding: 10px 14px; font-weight: 700; cursor: pointer; transition: transform .05s ease, box-shadow .2s ease; box-shadow: 0 10px 20px rgba(37,99,235,.25); }
+    button:hover { box-shadow: 0 12px 26px rgba(37,99,235,.33); }
+    button:active { transform: translateY(1px); }
+    .btn-ghost { background: transparent; border: 1px solid rgba(148,163,184,.3); color: var(--text); box-shadow: none; }
+    .btn-warn { background: linear-gradient(180deg, #f59e0b, #d97706); box-shadow: 0 10px 20px rgba(245,158,11,.25); }
+    .btn-danger { background: linear-gradient(180deg, #ef4444, #dc2626); box-shadow: 0 10px 20px rgba(239,68,68,.25); }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .status { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 999px; font-weight: 700; }
+    .ok { background: rgba(34,197,94,.12); color: #86efac; border: 1px solid rgba(34,197,94,.35); }
+    .warn { background: rgba(245,158,11,.12); color: #fde68a; border: 1px solid rgba(245,158,11,.35); }
+    .danger { background: rgba(239,68,68,.12); color: #fecaca; border: 1px solid rgba(239,68,68,.35); }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { border-bottom: 1px solid rgba(148,163,184,.12); padding: 10px 8px; vertical-align: top; }
+    .table th { text-align: left; color: var(--muted); font-weight: 600; font-size: .85rem; }
+    .muted { color: var(--muted); font-size: .9rem; }
+    .flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .right { margin-left: auto; }
+    .hidden { display: none; }
+    .img-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(148,163,184,.2); cursor: zoom-in; }
+    .divider { height: 1px; background: rgba(148,163,184,.12); margin: 10px 0; border-radius: 99px; }
+    .footer-note { color: var(--muted); font-size: .8rem; text-align: center; margin: 16px 0; }
+    @media print { body { background: white; color: black; } .card { box-shadow: none; border-radius: 0; border: 1px solid #ddd; } .no-print { display: none !important; } .container { max-width: none; } }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Повний сервісний трекер</h1>
+    <div class="sub">Офлайн-додаток для обліку ТО: інтервали, нагадування, історія, чеки та експорт у PDF. Дані зберігаються в <b>LocalStorage</b> вашого пристрою.</div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Профіль авто</h2>
+        <div class="row">
+          <div>
+            <label>Марка / модель</label>
+            <input id="v_make" placeholder="Volkswagen T4 2.5 TDI" />
+          </div>
+          <div>
+            <label>VIN (необов'язково)</label>
+            <input id="v_vin" placeholder="WV1ZZZ..." />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Поточний пробіг (км)</label>
+            <input id="v_odometer" type="number" inputmode="numeric" placeholder="Напр.: 250000" />
+          </div>
+          <div class="flex" style="align-items:end">
+            <button class="right" id="btnSaveVehicle">Зберегти профіль</button>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h2>Інтервали ТО</h2>
+        <div class="sub">Можна змінити під свій автомобіль. Система рахує за <u>пробігом</u> та <u>часом</u> (що настане раніше).</div>
+        <div id="intervals"></div>
+        <div class="flex" style="margin-top:10px">
+          <button id="btnResetIntervals" class="btn-ghost">Скинути до стандартних</button>
+          <button id="btnSaveIntervals" class="right">Зберегти інтервали</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Швидкий статус</h2>
+        <div class="sub">Показує, що горить терміново / скоро.</div>
+        <div class="chips" id="quickStatus"></div>
+        <div class="divider"></div>
+        <div class="flex">
+          <button id="btnRecalc">Перерахувати</button>
+          <button id="btnExportPDF" class="btn-warn">Експорт у PDF</button>
+          <button id="btnBackup" class="btn-ghost right">Резервна копія (JSON)</button>
+          <input id="backupFile" type="file" accept="application/json" class="hidden" />
+          <button id="btnRestore" class="btn-ghost">Відновити</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="card">
+      <h2>Додати подію ТО</h2>
+      <div class="row-3">
+        <div>
+          <label>Тип робіт</label>
+          <select id="svc_type"></select>
+        </div>
+        <div>
+          <label>Дата</label>
+          <input id="svc_date" type="date" />
+        </div>
+        <div>
+          <label>Пробіг (км)</label>
+          <input id="svc_mileage" type="number" inputmode="numeric" />
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Вартість (грн)</label>
+          <input id="svc_cost" type="number" inputmode="decimal" placeholder="Напр.: 2500" />
+        </div>
+        <div>
+          <label>Магазин / СТО (необов'язково)</label>
+          <input id="svc_vendor" placeholder="Назва СТО або магазину" />
+        </div>
+      </div>
+      <div>
+        <label>Нотатка</label>
+        <textarea id="svc_note" rows="2" placeholder="Марка масла, номер фільтра, перелік робіт..."></textarea>
+      </div>
+      <div class="row">
+        <div>
+          <label>Фото чеку / робіт (необов'язково)</label>
+          <input id="svc_receipt" type="file" accept="image/*" />
+        </div>
+        <div class="flex" style="align-items:end">
+          <button id="btnAddSvc">Додати у історію</button>
+          <button id="btnClearForm" class="btn-ghost">Очистити форму</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="flex">
+        <h2 style="margin-right:auto">Історія ТО</h2>
+        <input id="search" placeholder="Пошук: тип, нотатка, СТО..." style="max-width:320px" />
+      </div>
+      <div class="sub">Натисніть на чек, щоб збільшити. Дані можна видаляти по одному або очистити все.</div>
+      <div class="divider"></div>
+      <table class="table" id="historyTable">
+        <thead>
+          <tr>
+            <th>Дата</th>
+            <th>Тип</th>
+            <th>Пробіг</th>
+            <th>Вартість</th>
+            <th>СТО</th>
+            <th>Нотатка</th>
+            <th>Чек</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+      <div class="flex" style="margin-top:10px">
+        <button id="btnClearHistory" class="btn-danger">Очистити історію</button>
+        <div class="right muted" id="historyCount"></div>
+      </div>
+    </section>
+
+    <div class="footer-note">💾 Усе зберігається локально на вашому пристрої. Для переносу — скористайтесь резервною копією JSON.</div>
+  </div>
+
+<script>
+// === Дані та константи ===
+const LS_KEYS = { vehicle: 'svc_vehicle', intervals: 'svc_intervals', history: 'svc_history' };
+const DEFAULT_INTERVALS = [
+  { id: 'oil',        name: 'Масло двигуна',            km: 10000, months: 12 },
+  { id: 'oil_filter', name: 'Фільтр масляний',          km: 10000, months: 12 },
+  { id: 'air_filter', name: 'Фільтр повітряний',        km: 20000, months: 24 },
+  { id: 'fuel_filter',name: 'Фільтр паливний (дизель)', km: 20000, months: 24 },
+  { id: 'cabin_filter',name:'Фільтр салону',            km: 15000, months: 12 },
+  { id: 'timing_belt',name: 'Ремінь ГРМ',               km: 60000, months: 48 },
+  { id: 'brake_fluid',name: 'Гальмівна рідина',         km: 0,     months: 24 },
+  { id: 'coolant',    name: 'Охолоджуюча рідина (антифриз)', km: 0, months: 60 },
+  { id: 'brake_pads_f',name:'Гальм. колодки передні',   km: 30000, months: 0 },
+  { id: 'brake_pads_r',name:'Гальм. колодки задні',     km: 30000, months: 0 },
+  { id: 'tires_season',name:'Заміна шин (сезон)',       km: 0,     months: 6 },
+];
+let lastDoneMap = {};
+
+// === Утиліти ===
+const $ = (id) => document.getElementById(id);
+const todayStr = () => new Date().toISOString().slice(0,10);
+function parseNum(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
+function monthsBetween(a, b) { const d1 = new Date(a), d2 = new Date(b); return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth()); }
+function formatMoney(n){ if(!n && n!==0) return ''; return new Intl.NumberFormat('uk-UA').format(n) + ' ₴'; }
+function dlURL(filename, text) { try{ const blob = new Blob([text], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url), 3000);}catch(e){ alert('Не вдалося створити файл. Перевірте дозволи браузера.'); } }
+function fileToBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); }); }
+function genId(){ if (window.crypto?.randomUUID) return crypto.randomUUID(); return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8); return v.toString(16); }); }
+
+// === Збереження / завантаження ===
+function loadVehicle(){ try{ return JSON.parse(localStorage.getItem(LS_KEYS.vehicle) || '{}'); }catch{ return {}; } }
+function saveVehicle(v){ localStorage.setItem(LS_KEYS.vehicle, JSON.stringify(v)); }
+function loadIntervals(){ try{ return JSON.parse(localStorage.getItem(LS_KEYS.intervals) || 'null') || DEFAULT_INTERVALS; }catch{ return DEFAULT_INTERVALS; } }
+function saveIntervals(list){ localStorage.setItem(LS_KEYS.intervals, JSON.stringify(list)); }
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem(LS_KEYS.history) || '[]'); }catch{ return []; } }
+function saveHistory(list){ localStorage.setItem(LS_KEYS.history, JSON.stringify(list)); }
+
+// === Рендер інтервалів ===
+function renderIntervals(){ const list = loadIntervals(); const wrap = document.createElement('div'); list.forEach(item=>{ const row = document.createElement('div'); row.className = 'row'; row.style.marginTop = '8px'; row.innerHTML = `
+  <div><label>${item.name} — інтервал пробігу (км)</label><input data-id="${item.id}" data-key="km" type="number" value="${item.km}" /></div>
+  <div><label>${item.name} — інтервал часу (місяців)</label><input data-id="${item.id}" data-key="months" type="number" value="${item.months}" /></div>`; wrap.appendChild(row); }); const holder = $('intervals'); if(holder){ holder.innerHTML = ''; holder.appendChild(wrap); } }
+
+// === Облік останніх робіт з історії ===
+function rebuildLastDoneMap(){ lastDoneMap = {}; const history = loadHistory(); history.sort((a,b)=> b.date.localeCompare(a.date)); for(const rec of history){ if(!lastDoneMap[rec.type]){ lastDoneMap[rec.type] = { date: rec.date, mileage: rec.mileage }; } } }
+
+// === Статус елементу за інтервалом ===
+function calcStatus(item, vehicle){ const last = lastDoneMap[item.id] || { date: vehicle?.startDate || todayStr(), mileage: vehicle?.startMileage || 0 }; const nowDate = todayStr(); const months = item.months>0 ? monthsBetween(last.date || nowDate, nowDate) : 0; const kmPassed = Math.max(0, parseNum(vehicle?.odometer) - parseNum(last.mileage)); const kmLeft = item.km>0 ? Math.max(0, item.km - kmPassed) : Infinity; const monthsLeft = item.months>0 ? Math.max(0, item.months - months) : Infinity; let level = 'ok'; if ((item.km>0 && kmLeft<=0) || (item.months>0 && monthsLeft<=0)) level = 'danger'; else if ((item.km>0 && kmLeft<=1000) || (item.months>0 && monthsLeft<=1)) level = 'warn'; const nextKmAt = (last.mileage || 0) + (item.km||0); return { level, last, nextKmAt, kmLeft, monthsLeft }; }
+function levelRank(l){ return l==='danger'?3 : l==='warn'?2 : 1; }
+function renderQuickStatus(){ const vehicle = loadVehicle(); const list = loadIntervals(); rebuildLastDoneMap(); const box = $('quickStatus'); if(!box) return; box.innerHTML=''; const cards = list.map(item=>{ const st = calcStatus(item, vehicle); const el = document.createElement('div'); el.className = `status ${st.level}`; const kmTxt = item.km>0 ? (isFinite(st.kmLeft) ? `${st.kmLeft.toFixed(0)} км` : '—') : '—'; const moTxt = item.months>0 ? (isFinite(st.monthsLeft) ? `${st.monthsLeft.toFixed(0)} міс` : '—') : '—'; el.title = `Останнє: ${st.last.date || '—'}, ${st.last.mileage??'—'} км | Наступне: ${item.km? (st.nextKmAt+' км') : 'за часом'}.`; el.innerHTML = `${item.name} · залишилось: ${kmTxt} / ${moTxt}`; return {level: st.level, el}; }).sort((a,b)=> levelRank(b.level)-levelRank(a.level)); cards.forEach(c=> box.appendChild(c.el)); }
+
+// === Історія рендер ===
+function renderHistory(){ const q = ($('search')?.value||'').trim().toLowerCase(); const body = $('historyBody'); if(!body) return; const list = loadHistory(); const intervals = loadIntervals(); const byId = Object.fromEntries(intervals.map(i=>[i.id, i.name])); body.innerHTML=''; list.filter(r=> !q || [r.type, r.note, r.vendor].filter(Boolean).some(v=> String(v).toLowerCase().includes(q))).sort((a,b)=> b.date.localeCompare(a.date) || b.mileage - a.mileage).forEach((r)=>{ const tr = document.createElement('tr'); const img = r.receipt ? (()=>{ const i = document.createElement('img'); i.className='img-thumb'; i.src=r.receipt; i.alt='чек'; i.addEventListener('click', ()=> window.open(r.receipt, '_blank')); return i; })() : null; tr.innerHTML = `
+  <td>${r.date}</td>
+  <td>${byId[r.type] || r.type}</td>
+  <td>${(r.mileage??'').toLocaleString?.('uk-UA') || r.mileage || ''}</td>
+  <td>${r.cost? formatMoney(r.cost): '<span class="muted">—</span>'}</td>
+  <td>${r.vendor? r.vendor: '<span class="muted">—</span>'}</td>
+  <td>${r.note? r.note: '<span class="muted">—</span>'}</td>
+  <td class="receipt-cell"></td>
+  <td><button class="btn-ghost" data-del="${r.id}">Видалити</button></td>`; body.appendChild(tr); if(img) tr.querySelector('.receipt-cell').appendChild(img); tr.querySelector('[data-del]')?.addEventListener('click', ()=> deleteRecord(r.id)); }); const cnt = $('historyCount'); if(cnt) cnt.textContent = `Записів: ${list.length}`; }
+function deleteRecord(id){ if(!confirm('Видалити запис?')) return; const list = loadHistory().filter(r=> r.id!==id); saveHistory(list); rebuildLastDoneMap(); renderHistory(); renderQuickStatus(); }
+
+// === Додавання події ===
+async function addService(){ const type = $('svc_type')?.value; const date = $('svc_date')?.value || todayStr(); const mileage = parseNum($('svc_mileage')?.value); const cost = parseNum($('svc_cost')?.value); const vendor = $('svc_vendor')?.value.trim(); const note = $('svc_note')?.value.trim(); if (!type) { alert('Оберіть тип робіт.'); return; } if (mileage < 0) { alert('Пробіг не може бути від’ємним.'); return; } if (cost < 0) { alert('Вартість не може бути від’ємною.'); return; } if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { alert('Дата має бути у форматі РРРР-ММ-ДД.'); return; }
+  let receipt = null; const f = $('svc_receipt')?.files?.[0]; if(f){ if(!f.type.startsWith('image/')){ alert('Чек має бути зображенням.'); return; } if(f.size > 3*1024*1024){ if(!confirm('Файл > 3 МБ. Продовжити?')) return; } try{ receipt = await fileToBase64(f); }catch(e){ alert('Не вдалося прочитати файл чеку.'); } }
+  const rec = { id: genId(), type, date, mileage, cost, vendor, note, receipt, createdAt: new Date().toISOString() };
+  const hist = loadHistory(); hist.push(rec); try{ saveHistory(hist);}catch(e){ alert('Не вдалося зберегти історію у LocalStorage.'); return; }
+  if(mileage>0){ const v = loadVehicle(); v.odometer = Math.max(parseNum(v.odometer), mileage); try{ saveVehicle(v);}catch(e){} if($('v_odometer')) $('v_odometer').value = v.odometer; }
+  ['svc_mileage','svc_cost','svc_vendor','svc_note','svc_receipt'].forEach(id=>{ const el=$(id); if(el) el.value=''; }); if($('svc_date')) $('svc_date').value=todayStr(); rebuildLastDoneMap(); renderHistory(); renderQuickStatus(); alert('✅ Додано у історію'); }
+
+// === Експорт у PDF ===
+function exportPDF(){ try{ const { jsPDF } = window.jspdf || {}; if(!jsPDF) { window.print(); return; } const doc = new jsPDF({ unit: 'pt', format: 'a4' }); const vehicle = loadVehicle(); const title = `Сервісний трекер — ${vehicle.make || ''}`.trim(); doc.setFontSize(16); doc.text(title, 40, 40); doc.setFontSize(10); doc.text(new Date().toLocaleString('uk-UA'), 40, 58); const intervals = loadIntervals(); rebuildLastDoneMap(); let y=90; doc.setFontSize(12); doc.text('Швидкий статус', 40, y); y+=12; const statuses = intervals.map(i=>({i, st: calcStatus(i, loadVehicle())})).sort((a,b)=> levelRank(b.st.level)-levelRank(a.st.level)); doc.setFontSize(10); statuses.forEach(({i, st})=>{ const kmTxt = i.km>0 && isFinite(st.kmLeft)? `${st.kmLeft.toFixed(0)} км` : '—'; const moTxt = i.months>0 && isFinite(st.monthsLeft)? `${st.monthsLeft.toFixed(0)} міс` : '—'; const line = `${i.name}: ${st.level.toUpperCase()} · залишилось ${kmTxt} / ${moTxt}`; if(y>760){ doc.addPage(); y=40; } doc.text(line, 50, y); y+=14; }); const hist = loadHistory().sort((a,b)=> b.date.localeCompare(a.date)).slice(0,25); y+=10; if(y>760){ doc.addPage(); y=40; } doc.setFontSize(12); doc.text('Історія ТО (останні записи)', 40, y); y+=12; doc.setFontSize(9); hist.forEach(r=>{ const intervalsMap = Object.fromEntries(loadIntervals().map(x=>[x.id,x.name])); const line = `${r.date} · ${intervalsMap[r.type] || r.type} · ${r.mileage?.toLocaleString('uk-UA')} км · ${r.vendor||''} · ${r.note||''} ${r.cost? '· '+formatMoney(r.cost): ''}`; const chunks = splitText(doc, line, 510); chunks.forEach(ch=>{ if(y>780){ doc.addPage(); y=40; } doc.text(ch, 50, y); y+=12; }); y+=2; }); const fname = `service-tracker-${new Date().toISOString().slice(0,10)}.pdf`; doc.save(fname); } catch(e){ console.error(e); window.print(); } }
+function splitText(doc, text, maxWidth){ const words = text.split(' '); const lines=[]; let cur=''; words.forEach(w=>{ const t = cur? cur+' '+w : w; if(doc.getTextWidth(t)>maxWidth){ if(cur) lines.push(cur); cur=w; } else cur=t; }); if(cur) lines.push(cur); return lines; }
+
+// === Резервна копія ===
+function backup(){ const data = { vehicle: loadVehicle(), intervals: loadIntervals(), history: loadHistory(), exportedAt: new Date().toISOString(), version: 1 }; dlURL('service-tracker-backup.json', JSON.stringify(data, null, 2)); }
+function restore(file){ const reader = new FileReader(); reader.onload = () => { try{ const data = JSON.parse(reader.result); if(typeof data !== 'object' || !data) throw new Error('Невірний формат резервної копії'); if(data.vehicle && typeof data.vehicle === 'object') saveVehicle(data.vehicle); else if(data.vehicle!==undefined) throw new Error('Поле vehicle пошкоджене'); if(Array.isArray(data.intervals)) saveIntervals(data.intervals); else if(data.intervals!==undefined) throw new Error('Поле intervals пошкоджене'); if(Array.isArray(data.history)) saveHistory(data.history); else if(data.history!==undefined) throw new Error('Поле history пошкоджене'); hydrateUI(); alert('✅ Відновлено з резервної копії'); }catch(e){ alert('Помилка відновлення: '+ (e?.message||'невідомо')); } }; reader.onerror = ()=> alert('Не вдалося прочитати файл резервної копії'); reader.readAsText(file); }
+
+// === Ініціалізація UI ===
+function hydrateVehicle(){ const v = loadVehicle(); if($('v_make')) $('v_make').value = v.make||''; if($('v_vin')) $('v_vin').value = v.vin||''; if($('v_odometer')) $('v_odometer').value = v.odometer||''; }
+function hydrateTypes(){ const sel = $('svc_type'); if(sel){ sel.innerHTML=''; loadIntervals().forEach(i=>{ const o = document.createElement('option'); o.value=i.id; o.textContent=i.name; sel.appendChild(o); }); } if($('svc_date')) $('svc_date').value = todayStr(); }
+function hydrateUI(){ hydrateVehicle(); renderIntervals(); hydrateTypes(); rebuildLastDoneMap(); renderHistory(); renderQuickStatus(); }
+
+function saveVehicleFromUI(){ const existing = loadVehicle(); const newOdo = parseNum($('v_odometer')?.value); const prevOdo = parseNum(existing.odometer); if (newOdo < prevOdo) { if(!confirm(`Новий одометр (${newOdo.toLocaleString('uk-UA')} км) менший за попередній (${prevOdo.toLocaleString('uk-UA')} км). Все одно зберегти?`)) return; } const v = { make: $('v_make')?.value.trim(), vin: $('v_vin')?.value.trim(), odometer: newOdo, startDate: existing.startDate || todayStr(), startMileage: Number.isFinite(existing.startMileage) ? existing.startMileage : newOdo }; try{ saveVehicle(v);}catch(e){ alert('Помилка збереження профілю в LocalStorage.'); return; } renderQuickStatus(); alert('✅ Профіль авто збережено'); }
+function saveIntervalsFromUI(){ const holder = $('intervals'); if(!holder) return; const inputs = holder.querySelectorAll('input[data-id]'); const map = {}; inputs.forEach(inp=>{ const id = inp.getAttribute('data-id'); const key = inp.getAttribute('data-key'); map[id] = map[id] || { id }; map[id][key] = parseNum(inp.value); }); const current = loadIntervals(); const updated = current.map(it=> ({...it, ...(map[it.id]||{}) })); saveIntervals(updated); hydrateTypes(); renderQuickStatus(); alert('✅ Інтервали збережено'); }
+function resetIntervals(){ if(!confirm('Скинути інтервали до стандартних?')) return; saveIntervals(DEFAULT_INTERVALS); renderIntervals(); hydrateTypes(); renderQuickStatus(); }
+function clearForm(){ ['svc_mileage','svc_cost','svc_vendor','svc_note','svc_receipt'].forEach(id=>{ const el=$(id); if(el) el.value=''; }); }
+function clearHistory(){ if(!confirm('Очистити усю історію ТО? Це неможливо скасувати.')) return; saveHistory([]); rebuildLastDoneMap(); renderHistory(); renderQuickStatus(); }
+
+// === ініт ===
+window.addEventListener('DOMContentLoaded', ()=>{
+  try{ hydrateUI(); }catch(e){ console.error(e); alert('Помилка ініціалізації інтерфейсу. Перезавантажте сторінку.'); }
+  $('btnSaveVehicle')?.addEventListener('click', saveVehicleFromUI);
+  $('btnSaveIntervals')?.addEventListener('click', saveIntervalsFromUI);
+  $('btnResetIntervals')?.addEventListener('click', resetIntervals);
+  $('btnRecalc')?.addEventListener('click', ()=>{ rebuildLastDoneMap(); renderQuickStatus(); });
+  $('btnExportPDF')?.addEventListener('click', exportPDF);
+  $('btnBackup')?.addEventListener('click', backup);
+  $('btnRestore')?.addEventListener('click', ()=> $('backupFile')?.click());
+  $('backupFile')?.addEventListener('change', (e)=>{ const f=e.target.files?.[0]; if(f) restore(f); e.target.value=''; });
+  $('btnAddSvc')?.addEventListener('click', addService);
+  $('btnClearForm')?.addEventListener('click', clearForm);
+  $('btnClearHistory')?.addEventListener('click', clearHistory);
+  $('search')?.addEventListener('input', renderHistory);
+});
+</script>
+</body>
+</html>
+
