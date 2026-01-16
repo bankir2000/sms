@@ -221,13 +221,16 @@
                 const ППД = [];
 
                 textInputs.forEach((text, index) => {
-                    const selection = selections[index];
-                    if (selection === "БЧ") {
-                        БЧ.push(text);
-                    } else if (selection === "ППД") {
-                        ППД.push(text);
-                    }
-                });
+    const cleanedText = text.trim();
+    if (!cleanedText) return; // якщо порожньо — пропускаємо
+
+    const selection = selections[index];
+    if (selection === "БЧ") {
+        БЧ.push(cleanedText);
+    } else if (selection === "ППД") {
+        ППД.push(cleanedText);
+    }
+});
 
                 resultText = `${crewText} (${ovpSelection})\n`;
 
