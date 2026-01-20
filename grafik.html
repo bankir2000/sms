@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="uk"><head>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Графік чергування 48/24</title>
@@ -11,45 +13,73 @@ select, button, input { margin: 6px 0; width: 100%; padding: 8px; font-size: 16p
 .off { background:#7dff9a; }
 .patrol { background:#ffb3b3; font-weight:bold; color:#900; }
 .error { color:#b00020; font-weight:bold; margin:8px 0; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+table { border-collapse: collapse; font-size: 14px; min-width: 100%; }
 th, td { border: 1px solid #999; padding: 8px; text-align: center; }
 th { background:#f0f0f0; position: sticky; top: 0; z-index: 2; }
-#tableContainer { max-height: 80vh; overflow-y: auto; border: 1px solid #999; }
+#tableContainer { max-height: 60vh; overflow-y: auto; overflow-x: auto; border: 1px solid #999; }
+button { cursor: pointer; }
 </style>
 </head>
 <body>
-<h3>Графік чергування екіпажу (48/24)</h3><div class="legend">
+<h3>Графік чергування екіпажу (48/24)</h3>
+
+<div class="legend">
   <span class="on">Чергування</span>
   <span class="off">Відпочинок</span>
   <span class="patrol">ДОЗОР</span>
-</div><div id="errorBox" class="error"></div><label>Час початку чергування (для всіх)</label> <select id="startTime">
+</div>
 
+<div id="errorBox" class="error"></div>
+
+<label>Час початку чергування (для всіх)</label>
+<select id="startTime">
   <option value="">— оберіть —</option>
   <option value="6">06:00</option>
   <option value="18">18:00</option>
-</select><label>Місяць розрахунку</label> <select id="calcMonth"></select>
+</select>
 
-<label>Дата першого ДОЗОРУ</label> <input id="patrolDate" type="date">
+<label>Місяць розрахунку</label>
+<select id="calcMonth"></select>
 
-<label>Час початку ДОЗОРУ</label> <select id="patrolTime">
+<label>Дата першого ДОЗОРУ</label>
+<input id="patrolDate" type="date">
 
+<label>Час початку ДОЗОРУ</label>
+<select id="patrolTime">
   <option value="">— оберіть —</option>
   <option value="6">06:00</option>
   <option value="18">18:00</option>
-</select><hr><label>Член екіпажу 1 (ПІБ)</label> <input id="n1" placeholder="Прізвище І.П."> <label>Дата початку чергування</label> <input id="d1" type="date">
+</select>
 
-<label>Член екіпажу 2 (ПІБ)</label> <input id="n2" placeholder="Прізвище І.П."> <label>Дата початку чергування</label> <input id="d2" type="date">
+<hr>
 
-<label>Член екіпажу 3 (ПІБ)</label> <input id="n3" placeholder="Прізвище І.П."> <label>Дата початку чергування</label> <input id="d3" type="date">
+<label>Член екіпажу 1 (ПІБ)</label>
+<input id="n1" placeholder="Прізвище І.П.">
+<label>Дата початку чергування</label>
+<input id="d1" type="date">
 
-<button onclick="build()">Побудувати графік</button> <button onclick="shareTable()">Поділитися</button>
+<label>Член екіпажу 2 (ПІБ)</label>
+<input id="n2" placeholder="Прізвище І.П.">
+<label>Дата початку чергування</label>
+<input id="d2" type="date">
 
-<div id="tableContainer"></div><script>
+<label>Член екіпажу 3 (ПІБ)</label>
+<input id="n3" placeholder="Прізвище І.П.">
+<label>Дата початку чергування</label>
+<input id="d3" type="date">
+
+<button onclick="build()">Побудувати графік</button>
+<button onclick="shareTable()">Поділитися</button>
+<button onclick="window.location.href='./index.html'">Повернутися в меню</button>
+
+<div id="tableContainer"></div>
+
+<script>
 const SHIFT_ON = 48;
 const SHIFT_OFF = 24;
 const STEP = 12;
 
-// заповнення місяців року
+// Заповнення місяців року
 (function(){
   const y = new Date().getFullYear();
   for(let i=0;i<12;i++){
@@ -60,13 +90,21 @@ const STEP = 12;
   }
 })();
 
-function showError(msg){
-  errorBox.textContent = msg;
-}
+// Поля для збереження
+const fields = ['startTime','calcMonth','patrolDate','patrolTime','n1','d1','n2','d2','n3','d3'];
 
-function clearError(){
-  errorBox.textContent = '';
-}
+// Завантаження збережених значень
+fields.forEach(id => {
+  const el = document.getElementById(id);
+  if(localStorage.getItem(id)) el.value = localStorage.getItem(id);
+  // Зберігання змін одразу
+  el.addEventListener('change', () => {
+    localStorage.setItem(id, el.value);
+  });
+});
+
+function showError(msg){ errorBox.textContent = msg; }
+function clearError(){ errorBox.textContent = ''; }
 
 function build(){
   clearError();
@@ -75,7 +113,6 @@ function build(){
   if(!calcMonth.value) return showError('❗ Оберіть місяць розрахунку');
   if(!patrolDate.value) return showError('❗ Вкажіть дату першого ДОЗОРУ');
   if(!patrolTime.value) return showError('❗ Оберіть час початку ДОЗОРУ');
-
   if(!n1.value || !d1.value || !n2.value || !d2.value || !n3.value || !d3.value)
     return showError('❗ Заповніть ПІБ та дату початку чергування для ВСІХ членів екіпажу');
 
@@ -92,7 +129,6 @@ function build(){
 
   const monthStart = new Date(year,month,1,startHour,0,0);
   const monthEnd = new Date(year,month+1,1,startHour,0,0);
-
   let patrolStart = new Date(patrolDate.value);
   patrolStart.setHours(patrolHour,0,0,0);
 
@@ -144,4 +180,6 @@ async function shareTable(){
     await navigator.share({files:[file], title:'Графік чергування'});
   } else alert('Передача файлів не підтримується');
 }
-</script></body></html>
+</script>
+</body>
+</html>
