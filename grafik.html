@@ -156,9 +156,9 @@ function build(){
         html += '<td class="patrol">ДОЗОР</td>';
       } else if(isDuty){
         c.duty += STEP;
-        html += '<td class="on"></td>';
+        html += '<td class="on">Чергування</td>';
       } else {
-        html += '<td class="off"></td>';
+        html += '<td class="off">Відпочинок</td>';
       }
     });
     html += '</tr>';
