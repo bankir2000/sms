@@ -1,0 +1,147 @@
+<!DOCTYPE html><html lang="uk"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Графік чергування 48/24</title>
+<style>
+body { font-family: Arial, sans-serif; padding: 10px; }
+select, button, input { margin: 6px 0; width: 100%; padding: 8px; font-size: 16px; }
+.legend { margin: 10px 0; font-size: 14px; }
+.legend span { padding: 4px 8px; margin-right: 10px; border-radius: 4px; display:inline-block }
+.on { background:#7ec8ff; }
+.off { background:#7dff9a; }
+.patrol { background:#ffb3b3; font-weight:bold; color:#900; }
+.error { color:#b00020; font-weight:bold; margin:8px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { border: 1px solid #999; padding: 8px; text-align: center; }
+th { background:#f0f0f0; position: sticky; top: 0; z-index: 2; }
+#tableContainer { max-height: 80vh; overflow-y: auto; border: 1px solid #999; }
+</style>
+</head>
+<body>
+<h3>Графік чергування екіпажу (48/24)</h3><div class="legend">
+  <span class="on">Чергування</span>
+  <span class="off">Відпочинок</span>
+  <span class="patrol">ДОЗОР</span>
+</div><div id="errorBox" class="error"></div><label>Час початку чергування (для всіх)</label> <select id="startTime">
+
+  <option value="">— оберіть —</option>
+  <option value="6">06:00</option>
+  <option value="18">18:00</option>
+</select><label>Місяць розрахунку</label> <select id="calcMonth"></select>
+
+<label>Дата першого ДОЗОРУ</label> <input id="patrolDate" type="date">
+
+<label>Час початку ДОЗОРУ</label> <select id="patrolTime">
+
+  <option value="">— оберіть —</option>
+  <option value="6">06:00</option>
+  <option value="18">18:00</option>
+</select><hr><label>Член екіпажу 1 (ПІБ)</label> <input id="n1" placeholder="Прізвище І.П."> <label>Дата початку чергування</label> <input id="d1" type="date">
+
+<label>Член екіпажу 2 (ПІБ)</label> <input id="n2" placeholder="Прізвище І.П."> <label>Дата початку чергування</label> <input id="d2" type="date">
+
+<label>Член екіпажу 3 (ПІБ)</label> <input id="n3" placeholder="Прізвище І.П."> <label>Дата початку чергування</label> <input id="d3" type="date">
+
+<button onclick="build()">Побудувати графік</button> <button onclick="shareTable()">Поділитися</button>
+
+<div id="tableContainer"></div><script>
+const SHIFT_ON = 48;
+const SHIFT_OFF = 24;
+const STEP = 12;
+
+// заповнення місяців року
+(function(){
+  const y = new Date().getFullYear();
+  for(let i=0;i<12;i++){
+    const o=document.createElement('option');
+    o.value=`${i}-${y}`;
+    o.text=String(i+1).padStart(2,'0')+'-'+y;
+    calcMonth.appendChild(o);
+  }
+})();
+
+function showError(msg){
+  errorBox.textContent = msg;
+}
+
+function clearError(){
+  errorBox.textContent = '';
+}
+
+function build(){
+  clearError();
+
+  if(!startTime.value) return showError('❗ Оберіть час початку чергування');
+  if(!calcMonth.value) return showError('❗ Оберіть місяць розрахунку');
+  if(!patrolDate.value) return showError('❗ Вкажіть дату першого ДОЗОРУ');
+  if(!patrolTime.value) return showError('❗ Оберіть час початку ДОЗОРУ');
+
+  if(!n1.value || !d1.value || !n2.value || !d2.value || !n3.value || !d3.value)
+    return showError('❗ Заповніть ПІБ та дату початку чергування для ВСІХ членів екіпажу');
+
+  const startHour = parseInt(startTime.value);
+  const patrolHour = parseInt(patrolTime.value);
+  const [month,year] = calcMonth.value.split('-').map(Number);
+
+  const crew = [
+    {name:n1.value, startDate:new Date(d1.value), duty:0},
+    {name:n2.value, startDate:new Date(d2.value), duty:0},
+    {name:n3.value, startDate:new Date(d3.value), duty:0}
+  ];
+  crew.forEach(c => c.startDate.setHours(startHour,0,0,0));
+
+  const monthStart = new Date(year,month,1,startHour,0,0);
+  const monthEnd = new Date(year,month+1,1,startHour,0,0);
+
+  let patrolStart = new Date(patrolDate.value);
+  patrolStart.setHours(patrolHour,0,0,0);
+
+  let html = '<table><tr><th>Період (12 год)</th>';
+  crew.forEach(c=> html += `<th>${c.name}</th>`);
+  html += '</tr>';
+
+  for(let t=new Date(monthStart); t<monthEnd; t.setHours(t.getHours()+STEP)){
+    let from=new Date(t);
+    let to=new Date(t.getTime()+STEP*3600000);
+
+    const patrolDiff = (from - patrolStart) / 3600000;
+    const patrolCycle = ((patrolDiff % 96) + 96) % 96;
+    const isPatrol = patrolCycle < 24;
+
+    html += `<tr><td>${from.toLocaleString('uk-UA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}<br>—<br>${to.toLocaleString('uk-UA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}</td>`;
+
+    crew.forEach(c=>{
+      let diff = (from - c.startDate) / 3600000;
+      let cycle = ((diff % (SHIFT_ON+SHIFT_OFF)) + (SHIFT_ON+SHIFT_OFF)) % (SHIFT_ON+SHIFT_OFF);
+      let isDuty = cycle < SHIFT_ON;
+
+      if(isPatrol && isDuty){
+        c.duty += STEP;
+        html += '<td class="patrol">ДОЗОР</td>';
+      } else if(isDuty){
+        c.duty += STEP;
+        html += '<td class="on"></td>';
+      } else {
+        html += '<td class="off"></td>';
+      }
+    });
+    html += '</tr>';
+  }
+
+  html += '<tr><th>Разом годин (чергування + дозор)</th>';
+  crew.forEach(c=> html += `<th>${c.duty}</th>`);
+  html += '</tr></table>';
+
+  tableContainer.innerHTML = html;
+}
+
+async function shareTable(){
+  if(!tableContainer.innerHTML) return showError('❗ Спочатку побудуйте графік');
+  const label = calcMonth.options[calcMonth.selectedIndex].text;
+  const content = `<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1.0'>${document.querySelector('style').outerHTML}</head><body>${tableContainer.innerHTML}</body></html>`;
+  const file = new File([content], `grafik_${label}.html`, {type:'text/html'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    await navigator.share({files:[file], title:'Графік чергування'});
+  } else alert('Передача файлів не підтримується');
+}
+</script></body></html>
