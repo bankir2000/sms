@@ -1,267 +1,263 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Збереження і відображення даних</title>
-    <meta name="description" content="Програма для збереження і обробки даних">
-    <meta name="theme-color" content="#333333">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 10px;
-            padding: 0;
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-        h1, h2 {
-            font-size: 1.5rem;
-            text-align: center;
-        }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 15px;
-        }
-        label {
-            font-size: 1.2rem;
-            margin-bottom: 5px;
-        }
-        input, select, button {
-            font-size: 1.2rem;
-            padding: 12px;
-            margin-bottom: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 100%;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        #results {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            font-size: 1.5rem;
-            line-height: 1.6;
-        }
-        .checkbox-container {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-        }
-        .checkbox-container input {
-            margin-right: 10px;
-        }
-        @media (max-width: 480px) {
-            body {
-                font-size: 1.3rem;
-            }
-            h1, h2 {
-                font-size: 1.4rem;
-            }
-            label, input, select, button {
-                font-size: 1.3rem;
-            }
-            #results {
-                font-size: 1.4rem;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Збереження і відображення даних</title>
+<meta name="theme-color" content="#333333">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 10px;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    padding-bottom: 110px;
+}
+
+h1, h2 {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+label {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+input, select {
+    font-size: 1.2rem;
+    padding: 12px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+}
+
+/* 🔹 Сірий інформаційний текст */
+input::placeholder {
+    color: #9a9a9a;
+}
+
+#results {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    white-space: pre-wrap;
+    font-size: 1.4rem;
+}
+
+/* 🔘 Фіксована панель */
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #f0f0f0;
+    border-top: 1px solid #999;
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    z-index: 10;
+}
+
+.bottom-bar button {
+    flex: 1;
+    font-size: 1.1rem;
+    padding: 14px;
+    background:#4CAF50;
+    color:white;
+    border:none;
+}
+</style>
 </head>
+
 <body>
-    <h1>Форма введення та аналізу даних</h1>
 
-    <div class="input-group">
-        <label for="crew-input">Екіпаж:</label>
-        <input type="text" id="crew-input" oninput="saveCrewText()">
-        <div class="checkbox-container">
-            <input type="checkbox" id="shift-complete">
-            <label for="shift-complete">Завершив чергування</label>
-        </div>
-    </div>
+<h1>Форма введення та аналізу даних</h1>
 
-    <div class="input-group">
-        <label for="ovp-select">Виїзд на позицію:</label>
-        <select id="ovp-select" onchange="saveOvpSelection()">
-            <option value=""> </option>
-            <option value="ОВП">ОВП</option>
-            <option value="ЗВП-1">ЗВП-1</option>
-            <option value="ЗВП-2">ЗВП-2</option>
-            <option value="ЗВП-3">ЗВП-3</option>
-            <option value="ЗВП-4">ЗВП-4</option>
-            <option value="ЗВП-5">ЗВП-5</option>
-            <option value="ЗВП-6">ЗВП-6</option>
-            <option value="Сосновий Бір">Сосновий Бір</option>
-        </select>
-    </div>
+<div class="input-group">
+    <label>Екіпаж:</label>
+    <input type="text" id="crew-input" oninput="saveCrewText()">
+    <label>
+        <input type="checkbox" id="shift-complete">
+        Завершив чергування
+    </label>
+</div>
 
-    <div id="data-container">
-        <h2>Дані:</h2>
-        <div class="input-group">
-            <label for="text1-input">Текст 1:</label>
-            <input type="text" id="text1-input" oninput="saveTextFields()">
-            <select class="selection" onchange="saveSelections()">
-                <option value="БЧ">БЧ</option>
-                <option value="ППД">ППД</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <label for="text2-input">Текст 2:</label>
-            <input type="text" id="text2-input" oninput="saveTextFields()">
-            <select class="selection" onchange="saveSelections()">
-                <option value="БЧ">БЧ</option>
-                <option value="ППД">ППД</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <label for="text3-input">Текст 3:</label>
-            <input type="text" id="text3-input" oninput="saveTextFields()">
-            <select class="selection" onchange="saveSelections()">
-                <option value="БЧ">БЧ</option>
-                <option value="ППД">ППД</option>
-            </select>
-        </div>
-        <div class="input-group">
-            <label for="text4-input">Текст 4:</label>
-            <input type="text" id="text4-input" oninput="saveTextFields()">
-            <select class="selection" onchange="saveSelections()">
-                <option value="БЧ">БЧ</option>
-                <option value="ППД">ППД</option>
-            </select>
-        </div>
-        <button onclick="processResults()">Обробити</button>
-    </div>
+<div class="input-group">
+    <label>Виїзд на позицію:</label>
+    <select id="ovp-select" onchange="saveOvpSelection()">
+        <option value=""></option>
+        <option>ОВП</option>
+        <option>ЗВП-1</option>
+        <option>ЗВП-2</option>
+        <option>ЗВП-3</option>
+        <option>ЗВП-4</option>
+        <option>ЗВП-5</option>
+        <option>ЗВП-6</option>
+        <option>Сосновий Бір</option>
+    </select>
+</div>
 
-    <div id="results" class="result-group"></div>
-    <button id="copy-button" onclick="copyResults()" style="display: none;">Скопіювати результати</button>
+<h2>Дані</h2>
 
-    <script>
-        window.onload = function() {
-            const savedCrewText = localStorage.getItem("crewText");
-            const savedOvpSelection = localStorage.getItem("ovpSelection");
-            const savedTextFields = JSON.parse(localStorage.getItem("textFields"));
-            const savedSelections = JSON.parse(localStorage.getItem("selections"));
+<div class="input-group">
+    <input id="text1-input"
+           placeholder="Прізвище та ініціали члена екіпажу"
+           oninput="saveTextFields()">
+    <select class="selection" onchange="saveSelections()">
+        <option>БЧ</option>
+        <option>ППД</option>
+    </select>
+</div>
 
-            if (savedCrewText) {
-                document.getElementById("crew-input").value = savedCrewText;
-            }
+<div class="input-group">
+    <input id="text2-input"
+           placeholder="Прізвище та ініціали члена екіпажу"
+           oninput="saveTextFields()">
+    <select class="selection" onchange="saveSelections()">
+        <option>БЧ</option>
+        <option>ППД</option>
+    </select>
+</div>
 
-            if (savedOvpSelection) {
-                document.getElementById("ovp-select").value = savedOvpSelection;
-            }
+<div class="input-group">
+    <input id="text3-input"
+           placeholder="Прізвище та ініціали члена екіпажу"
+           oninput="saveTextFields()">
+    <select class="selection" onchange="saveSelections()">
+        <option>БЧ</option>
+        <option>ППД</option>
+    </select>
+</div>
 
-            if (savedTextFields) {
-                document.getElementById("text1-input").value = savedTextFields[0] || "";
-                document.getElementById("text2-input").value = savedTextFields[1] || "";
-                document.getElementById("text3-input").value = savedTextFields[2] || "";
-                document.getElementById("text4-input").value = savedTextFields[3] || "";
-            }
+<div class="input-group">
+    <input id="text4-input"
+           placeholder="Прізвище та ініціали члена екіпажу"
+           oninput="saveTextFields()">
+    <select class="selection" onchange="saveSelections()">
+        <option>БЧ</option>
+        <option>ППД</option>
+    </select>
+</div>
 
-            if (savedSelections) {
-                const selections = document.querySelectorAll(".selection");
-                selections.forEach((select, index) => {
-                    select.value = savedSelections[index] || "БЧ";
-                });
-            }
-        };
+<div id="results"></div>
 
-        function saveCrewText() {
-            const crewText = document.getElementById("crew-input").value;
-            localStorage.setItem("crewText", crewText);
-        }
+<!-- 🔘 КНОПКИ -->
+<div class="bottom-bar">
+    <button onclick="processResults()">Обробити</button>
+    <button onclick="shareResults()">Передати</button>
+    <button onclick="goMenu()">Меню</button>
+</div>
 
-        function saveOvpSelection() {
-            const ovpSelection = document.getElementById("ovp-select").value;
-            localStorage.setItem("ovpSelection", ovpSelection);
-        }
+<script>
+function el(id){ return document.getElementById(id); }
 
-        function saveTextFields() {
-            const textFields = [
-                document.getElementById("text1-input").value,
-                document.getElementById("text2-input").value,
-                document.getElementById("text3-input").value,
-                document.getElementById("text4-input").value
-            ];
-            localStorage.setItem("textFields", JSON.stringify(textFields));
-        }
+window.onload = function(){
+    // Відновлення crew-input і ovp-select
+    if(localStorage.crewText) el("crew-input").value = localStorage.crewText;
+    if(localStorage.ovpSelection) el("ovp-select").value = localStorage.ovpSelection;
 
-        function saveSelections() {
-            const selections = Array.from(document.querySelectorAll(".selection")).map(select => select.value);
-            localStorage.setItem("selections", JSON.stringify(selections));
-        }
-
-        function processResults() {
-            const crewText = localStorage.getItem("crewText") || "";
-            const ovpSelection = localStorage.getItem("ovpSelection") || "";
-            const textInputs = [
-                document.getElementById("text1-input").value,
-                document.getElementById("text2-input").value,
-                document.getElementById("text3-input").value,
-                document.getElementById("text4-input").value
-            ];
-            const selections = Array.from(document.querySelectorAll(".selection")).map(select => select.value);
-            const isShiftComplete = document.getElementById("shift-complete").checked;
-
-            let resultText = "";
-
-            if (isShiftComplete) {
-                resultText = `${crewText} завершив чергування`;
-            } else {
-                const БЧ = [];
-                const ППД = [];
-
-                textInputs.forEach((text, index) => {
-    const cleanedText = text.trim();
-    if (!cleanedText) return; // якщо порожньо — пропускаємо
-
-    const selection = selections[index];
-    if (selection === "БЧ") {
-        БЧ.push(cleanedText);
-    } else if (selection === "ППД") {
-        ППД.push(cleanedText);
+    // 🔹 Відновлення полів text1–text4
+    if(localStorage.textFields){
+        const texts = JSON.parse(localStorage.textFields);
+        el("text1-input").value = texts[0] || "";
+        el("text2-input").value = texts[1] || "";
+        el("text3-input").value = texts[2] || "";
+        el("text4-input").value = texts[3] || "";
     }
-});
 
-                resultText = `${crewText} (${ovpSelection})\n`;
+    // 🔹 Відновлення select для кожного text-поля (БЧ / ППД)
+    if(localStorage.selections){
+        const sels = JSON.parse(localStorage.selections);
+        const selects = document.querySelectorAll(".selection");
+        selects.forEach((s, i) => {
+            s.value = sels[i] || "БЧ"; // за замовчуванням БЧ
+        });
+    }
+};
 
-                if (БЧ.length) {
-                    resultText += "На БЧ:\n";
-                    resultText += БЧ.join("\n") + "\n";
-                }
+function saveCrewText(){
+    localStorage.crewText = el("crew-input").value;
+}
 
-                if (ППД.length) {
-                    resultText += "На ППД:\n";
-                    resultText += ППД.join("\n") + "\n";
-                }
+function saveOvpSelection(){
+    localStorage.ovpSelection = el("ovp-select").value;
+}
 
-                resultText += "4.5.0";
-            }
+function saveTextFields(){
+    localStorage.textFields = JSON.stringify([
+        el("text1-input").value,
+        el("text2-input").value,
+        el("text3-input").value,
+        el("text4-input").value
+    ]);
+}
 
-            const resultsContainer = document.getElementById("results");
-            resultsContainer.innerHTML = `<pre>${resultText.trim()}</pre>`;
-            document.getElementById("copy-button").style.display = "block";
-        }
+function saveSelections(){
+    localStorage.selections = JSON.stringify(
+        [...document.querySelectorAll(".selection")].map(s=>s.value)
+    );
+}
 
-        function copyResults() {
-            const results = document.getElementById("results").innerText;
-            navigator.clipboard.writeText(results)
-                .then(() => {
-                    alert("Результати скопійовано у буфер обміну!");
-                })
-                .catch((err) => {
-                    alert("Помилка копіювання: " + err);
-                });
-        }
-    </script>
+function processResults(){
+    const crew = el("crew-input").value || "";
+    const ovp  = el("ovp-select").value || "";
+    const done = el("shift-complete").checked;
+
+    const texts = [
+        el("text1-input").value,
+        el("text2-input").value,
+        el("text3-input").value,
+        el("text4-input").value
+    ];
+    const sels = [...document.querySelectorAll(".selection")].map(s=>s.value);
+
+    let out="";
+
+    if(done){
+        out = `${crew} завершив чергування`;
+    } else {
+        let bc=[], ppd=[];
+        texts.forEach((t,i)=>{
+            if(!t.trim()) return;
+            (sels[i]==="БЧ" ? bc : ppd).push(t.trim());
+        });
+
+        out = `${crew} (${ovp})\n`;
+        if(bc.length) out += "На БЧ:\n" + bc.join("\n") + "\n";
+        if(ppd.length) out += "На ППД:\n" + ppd.join("\n") + "\n";
+        out += "4.5.0";
+    }
+
+    el("results").innerHTML = `<pre>${out}</pre>`;
+}
+
+async function shareResults(){
+    const text = el("results").innerText;
+    if(!text) return alert("Немає результату");
+
+    if(navigator.share){
+        navigator.share({ text });
+    } else {
+        navigator.clipboard.writeText(text);
+        alert("Скопійовано");
+    }
+}
+
+function goMenu(){
+    window.location.href = "./index.html";
+}
+</script>
+
 </body>
 </html>
