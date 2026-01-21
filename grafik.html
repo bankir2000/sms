@@ -4,23 +4,128 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Графік чергування 48/24</title>
+
 <style>
-body { font-family: Arial, sans-serif; padding: 10px; }
-select, button, input { margin: 6px 0; width: 100%; padding: 8px; font-size: 16px; }
-.legend { margin: 10px 0; font-size: 14px; }
-.legend span { padding: 4px 8px; margin-right: 10px; border-radius: 4px; display:inline-block }
+body {
+  font-family: Arial, sans-serif;
+  padding: 10px;
+  padding-bottom: 90px; /* місце під нижню панель */
+}
+
+select, input, button {
+  margin: 6px 0;
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+}
+
+h3 { margin-top: 0; }
+
+.legend span {
+  padding: 4px 8px;
+  margin-right: 6px;
+  border-radius: 4px;
+  display:inline-block;
+  font-size: 13px;
+}
+
 .on { background:#7ec8ff; }
 .off { background:#7dff9a; }
 .patrol { background:#ffb3b3; font-weight:bold; color:#900; }
-.error { color:#b00020; font-weight:bold; margin:8px 0; }
-table { border-collapse: collapse; font-size: 14px; min-width: 100%; }
-th, td { border: 1px solid #999; padding: 8px; text-align: center; }
-th { background:#f0f0f0; position: sticky; top: 0; z-index: 2; }
-#tableContainer { max-height: 60vh; overflow-y: auto; overflow-x: auto; border: 1px solid #999; }
-button { cursor: pointer; }
+
+.error {
+  color:#b00020;
+  font-weight:bold;
+  margin:8px 0;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 100%;
+}
+
+th, td {
+  border: 1px solid #999;
+  padding: 8px;
+  text-align: center;
+}
+
+th {
+  background:#f0f0f0;
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+
+#tableContainer {
+  max-height: 65vh;
+  overflow: auto;
+  border: 1px solid #999;
+  margin-top: 10px;
+}
+
+/* ===================== */
+/* 📱 СМАРТФОН */
+body.mobile {
+  font-size: 13px;
+}
+
+body.mobile h3 {
+  font-size: 16px;
+  text-align: center;
+}
+
+body.mobile table {
+  font-size: 12px;
+}
+
+body.mobile th,
+body.mobile td {
+  padding: 4px;
+  min-width: 90px;
+}
+
+body.mobile th:first-child,
+body.mobile td:first-child {
+  position: sticky;
+  left: 0;
+  background: #f8f8f8;
+  z-index: 5;
+  min-width: 120px;
+}
+
+/* ===================== */
+/* 📲 ПЛАНШЕТ */
+body.tablet table {
+  font-size: 13px;
+}
+
+/* ===================== */
+/* 🔘 Нижня панель */
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #f0f0f0;
+  border-top: 1px solid #999;
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  z-index: 10;
+}
+
+.bottom-bar button {
+  flex: 1;
+  font-size: 15px;
+  padding: 10px;
+}
 </style>
 </head>
+
 <body>
+
 <h3>Графік чергування екіпажу (48/24)</h3>
 
 <div class="legend">
@@ -53,33 +158,37 @@ button { cursor: pointer; }
 
 <hr>
 
-<label>Член екіпажу 1 (ПІБ)</label>
-<input id="n1" placeholder="Прізвище І.П.">
-<label>Дата початку чергування</label>
-<input id="d1" type="date">
+<label>Член екіпажу 1</label>
+<input id="n1"><input id="d1" type="date">
 
-<label>Член екіпажу 2 (ПІБ)</label>
-<input id="n2" placeholder="Прізвище І.П.">
-<label>Дата початку чергування</label>
-<input id="d2" type="date">
+<label>Член екіпажу 2</label>
+<input id="n2"><input id="d2" type="date">
 
-<label>Член екіпажу 3 (ПІБ)</label>
-<input id="n3" placeholder="Прізвище І.П.">
-<label>Дата початку чергування</label>
-<input id="d3" type="date">
-
-<button onclick="build()">Побудувати графік</button>
-<button onclick="shareTable()">Поділитися</button>
-<button onclick="window.location.href='./index.html'">Повернутися в меню</button>
+<label>Член екіпажу 3</label>
+<input id="n3"><input id="d3" type="date">
 
 <div id="tableContainer"></div>
 
+<!-- 🔘 Нижня панель -->
+<div class="bottom-bar">
+  <button onclick="build()">Побудувати</button>
+  <button onclick="shareTable()">Поділитися</button>
+  <button onclick="goMenu()">Меню</button>
+</div>
+
 <script>
+/* 📱 Автовизначення пристрою */
+(function(){
+  const w = window.innerWidth;
+  if (w <= 600) document.body.classList.add('mobile');
+  else if (w <= 1024) document.body.classList.add('tablet');
+})();
+
 const SHIFT_ON = 48;
 const SHIFT_OFF = 24;
 const STEP = 12;
 
-// Заповнення місяців року
+/* Місяці */
 (function(){
   const y = new Date().getFullYear();
   for(let i=0;i<12;i++){
@@ -90,96 +199,79 @@ const STEP = 12;
   }
 })();
 
-// Поля для збереження
-const fields = ['startTime','calcMonth','patrolDate','patrolTime','n1','d1','n2','d2','n3','d3'];
-
-// Завантаження збережених значень
-fields.forEach(id => {
-  const el = document.getElementById(id);
-  if(localStorage.getItem(id)) el.value = localStorage.getItem(id);
-  // Зберігання змін одразу
-  el.addEventListener('change', () => {
-    localStorage.setItem(id, el.value);
-  });
+const fields=['startTime','calcMonth','patrolDate','patrolTime','n1','d1','n2','d2','n3','d3'];
+fields.forEach(id=>{
+  const el=document.getElementById(id);
+  if(localStorage[id]) el.value=localStorage[id];
+  el.onchange=()=>localStorage[id]=el.value;
 });
 
-function showError(msg){ errorBox.textContent = msg; }
-function clearError(){ errorBox.textContent = ''; }
+function showError(m){ errorBox.textContent=m }
+function clearError(){ errorBox.textContent='' }
 
 function build(){
   clearError();
+  if(!startTime.value||!calcMonth.value||!patrolDate.value||!patrolTime.value)
+    return showError('❗ Заповніть всі обовʼязкові поля');
 
-  if(!startTime.value) return showError('❗ Оберіть час початку чергування');
-  if(!calcMonth.value) return showError('❗ Оберіть місяць розрахунку');
-  if(!patrolDate.value) return showError('❗ Вкажіть дату першого ДОЗОРУ');
-  if(!patrolTime.value) return showError('❗ Оберіть час початку ДОЗОРУ');
-  if(!n1.value || !d1.value || !n2.value || !d2.value || !n3.value || !d3.value)
-    return showError('❗ Заповніть ПІБ та дату початку чергування для ВСІХ членів екіпажу');
-
-  const startHour = parseInt(startTime.value);
-  const patrolHour = parseInt(patrolTime.value);
-  const [month,year] = calcMonth.value.split('-').map(Number);
-
-  const crew = [
-    {name:n1.value, startDate:new Date(d1.value), duty:0},
-    {name:n2.value, startDate:new Date(d2.value), duty:0},
-    {name:n3.value, startDate:new Date(d3.value), duty:0}
+  const [month,year]=calcMonth.value.split('-').map(Number);
+  const crew=[
+    {n:n1.value,d:new Date(d1.value),h:0},
+    {n:n2.value,d:new Date(d2.value),h:0},
+    {n:n3.value,d:new Date(d3.value),h:0}
   ];
-  crew.forEach(c => c.startDate.setHours(startHour,0,0,0));
+  crew.forEach(c=>c.d.setHours(startTime.value,0,0,0));
 
-  const monthStart = new Date(year,month,1,startHour,0,0);
-  const monthEnd = new Date(year,month+1,1,startHour,0,0);
-  let patrolStart = new Date(patrolDate.value);
-  patrolStart.setHours(patrolHour,0,0,0);
+  const mStart=new Date(year,month,1,startTime.value);
+  const mEnd=new Date(year,month+1,1,startTime.value);
 
-  let html = '<table><tr><th>Період (12 год)</th>';
-  crew.forEach(c=> html += `<th>${c.name}</th>`);
-  html += '</tr>';
+  let pStart=new Date(patrolDate.value);
+  pStart.setHours(patrolTime.value,0,0,0);
 
-  for(let t=new Date(monthStart); t<monthEnd; t.setHours(t.getHours()+STEP)){
-    let from=new Date(t);
-    let to=new Date(t.getTime()+STEP*3600000);
+  let html='<table><tr><th>Період (12 год)</th>';
+  crew.forEach(c=>html+=`<th>${c.n}</th>`);
+  html+='</tr>';
 
-    const patrolDiff = (from - patrolStart) / 3600000;
-    const patrolCycle = ((patrolDiff % 96) + 96) % 96;
-    const isPatrol = patrolCycle < 24;
+  for(let t=new Date(mStart);t<mEnd;t.setHours(t.getHours()+12)){
+    let to=new Date(t.getTime()+43200000);
+    html+=`<tr><td>${t.toLocaleString('uk-UA')}<br>—<br>${to.toLocaleString('uk-UA')}</td>`;
 
-    html += `<tr><td>${from.toLocaleString('uk-UA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}<br>—<br>${to.toLocaleString('uk-UA',{hour:'2-digit',minute:'2-digit',day:'2-digit',month:'2-digit',year:'numeric'})}</td>`;
+    const patrol=((t-pStart)/3600000%96+96)%96<24;
 
     crew.forEach(c=>{
-      let diff = (from - c.startDate) / 3600000;
-      let cycle = ((diff % (SHIFT_ON+SHIFT_OFF)) + (SHIFT_ON+SHIFT_OFF)) % (SHIFT_ON+SHIFT_OFF);
-      let isDuty = cycle < SHIFT_ON;
-
-      if(isPatrol && isDuty){
-        c.duty += STEP;
-        html += '<td class="patrol">ДОЗОР</td>';
-      } else if(isDuty){
-        c.duty += STEP;
-        html += '<td class="on">Чергування</td>';
-      } else {
-        html += '<td class="off">Відпочинок</td>';
-      }
+      let cyc=((t-c.d)/3600000%72+72)%72;
+      if(cyc<48){
+        c.h+=12;
+        html+=patrol?'<td class="patrol">ДОЗОР</td>':'<td class="on">Чергування</td>';
+      } else html+='<td class="off">Відпочинок</td>';
     });
-    html += '</tr>';
+    html+='</tr>';
   }
 
-  html += '<tr><th>Разом годин (чергування + дозор)</th>';
-  crew.forEach(c=> html += `<th>${c.duty}</th>`);
-  html += '</tr></table>';
+  html+='<tr><th>Разом годин</th>';
+  crew.forEach(c=>html+=`<th>${c.h}</th>`);
+  html+='</tr></table>';
 
-  tableContainer.innerHTML = html;
+  tableContainer.innerHTML=html;
 }
 
 async function shareTable(){
   if(!tableContainer.innerHTML) return showError('❗ Спочатку побудуйте графік');
-  const label = calcMonth.options[calcMonth.selectedIndex].text;
-  const content = `<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1.0'>${document.querySelector('style').outerHTML}</head><body>${tableContainer.innerHTML}</body></html>`;
-  const file = new File([content], `grafik_${label}.html`, {type:'text/html'});
-  if(navigator.canShare && navigator.canShare({files:[file]})){
-    await navigator.share({files:[file], title:'Графік чергування'});
-  } else alert('Передача файлів не підтримується');
+  const file=new File(
+    [`<!DOCTYPE html><html><head>${document.head.innerHTML}</head>
+      <body class="${document.body.className}">${tableContainer.innerHTML}</body></html>`],
+    'grafik.html',
+    {type:'text/html'}
+  );
+  if(navigator.canShare({files:[file]}))
+    navigator.share({files:[file]});
+  else alert('Передача не підтримується');
+}
+
+function goMenu(){
+  window.location.href='./index.html';
 }
 </script>
+
 </body>
 </html>
