@@ -173,10 +173,13 @@
 
 <script>
 // Дата за замовчуванням: поточна + 1 день
-var tomorrow = new Date();
-tomorrow.setDate(tomorrow.getDate() + 1);
-document.getElementById('date').valueAsDate = tomorrow;
-
+    var now = new Date();
+    var timeZoneOffset = 120; // +02:00 Київ
+    var kievTime = new Date(now.getTime() + (timeZoneOffset*60*1000));
+    // Додаємо один день
+    kievTime.setDate(kievTime.getDate() + 1);
+    var formattedDate = kievTime.toISOString().substr(0,10);
+    document.getElementById('date').value = formattedDate;
 // Підвантаження збережених даних
 if(localStorage.getItem('crewNumber')) {
     document.getElementById('crewNumber').value = localStorage.getItem('crewNumber');
