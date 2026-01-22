@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Графік чергування 48/24</title>
+<title>Графік чергування</title>
 
 <style>
 body {
   font-family: Arial, sans-serif;
   padding: 10px;
-  padding-bottom: 90px; /* місце під нижню панель */
+  padding-bottom: 90px;
 }
 
 select, input, button {
@@ -65,8 +65,6 @@ th {
   margin-top: 10px;
 }
 
-/* ===================== */
-/* 📱 СМАРТФОН */
 body.mobile {
   font-size: 13px;
 }
@@ -95,14 +93,10 @@ body.mobile td:first-child {
   min-width: 120px;
 }
 
-/* ===================== */
-/* 📲 ПЛАНШЕТ */
 body.tablet table {
   font-size: 13px;
 }
 
-/* ===================== */
-/* 🔘 Нижня панель */
 .bottom-bar {
   position: fixed;
   bottom: 0;
@@ -121,12 +115,27 @@ body.tablet table {
   font-size: 15px;
   padding: 10px;
 }
+
+.schedule-type {
+  background: #f8f8f8;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+}
 </style>
 </head>
 
 <body>
 
-<h3>Графік чергування екіпажу (48/24)</h3>
+<div class="schedule-type">
+  <h3 id="scheduleTitle">Графік чергування екіпажу (48/24)</h3>
+  <label>Тип графіка</label>
+  <select id="scheduleType">
+    <option value="48/24">48/24 (48 годин чергування, 24 відпочинок)</option>
+    <option value="24/12">24/12 (24 години чергування, 12 відпочинок)</option>
+  </select>
+</div>
 
 <div class="legend">
   <span class="on">Чергування</span>
@@ -169,7 +178,6 @@ body.tablet table {
 
 <div id="tableContainer"></div>
 
-<!-- 🔘 Нижня панель -->
 <div class="bottom-bar">
   <button onclick="build()">Побудувати</button>
   <button onclick="shareTable()">Поділитися</button>
@@ -184,9 +192,23 @@ body.tablet table {
   else if (w <= 1024) document.body.classList.add('tablet');
 })();
 
-const SHIFT_ON = 48;
-const SHIFT_OFF = 24;
-const STEP = 12;
+/* Константи для різних режимів */
+const SCHEDULE_TYPES = {
+  '48/24': {
+    SHIFT_ON: 48,
+    SHIFT_OFF: 24,
+    PATROL_CYCLE: 96,  // цикл патруля
+    PATROL_DURATION: 24 // тривалість патруля
+  },
+  '24/12': {
+    SHIFT_ON: 24,
+    SHIFT_OFF: 12,
+    PATROL_CYCLE: 96,   // залишаємо той самий цикл патруля
+    PATROL_DURATION: 24 // залишаємо ту саму тривалість патруля
+  }
+};
+
+const STEP = 12; // крок відображення
 
 /* Місяці */
 (function(){
@@ -199,12 +221,27 @@ const STEP = 12;
   }
 })();
 
-const fields=['startTime','calcMonth','patrolDate','patrolTime','n1','d1','n2','d2','n3','d3'];
+/* Збереження даних */
+const fields=['scheduleType','startTime','calcMonth','patrolDate','patrolTime','n1','d1','n2','d2','n3','d3'];
 fields.forEach(id=>{
   const el=document.getElementById(id);
   if(localStorage[id]) el.value=localStorage[id];
-  el.onchange=()=>localStorage[id]=el.value;
+  el.onchange=()=>{
+    localStorage[id]=el.value;
+    if(id === 'scheduleType') {
+      updateScheduleTitle();
+    }
+  };
 });
+
+/* Оновлення заголовка */
+function updateScheduleTitle() {
+  const type = scheduleType.value;
+  scheduleTitle.textContent = `Графік чергування екіпажу (${type})`;
+}
+
+/* Ініціалізація заголовка */
+updateScheduleTitle();
 
 function showError(m){ errorBox.textContent=m }
 function clearError(){ errorBox.textContent='' }
@@ -213,6 +250,15 @@ function build(){
   clearError();
   if(!startTime.value||!calcMonth.value||!patrolDate.value||!patrolTime.value)
     return showError('❗ Заповніть всі обовʼязкові поля');
+
+  const scheduleTypeValue = scheduleType.value;
+  const schedule = SCHEDULE_TYPES[scheduleTypeValue];
+  const SHIFT_ON = schedule.SHIFT_ON;
+  const SHIFT_OFF = schedule.SHIFT_OFF;
+  const PATROL_CYCLE = schedule.PATROL_CYCLE;
+  const PATROL_DURATION = schedule.PATROL_DURATION;
+  
+  const CYCLE_LENGTH = SHIFT_ON + SHIFT_OFF; // загальна довжина циклу
 
   const [month,year]=calcMonth.value.split('-').map(Number);
   const crew=[
@@ -232,18 +278,25 @@ function build(){
   crew.forEach(c=>html+=`<th>${c.n}</th>`);
   html+='</tr>';
 
-  for(let t=new Date(mStart);t<mEnd;t.setHours(t.getHours()+12)){
-    let to=new Date(t.getTime()+43200000);
+  for(let t=new Date(mStart);t<mEnd;t.setHours(t.getHours()+STEP)){
+    let to=new Date(t.getTime() + STEP * 3600000);
     html+=`<tr><td>${t.toLocaleString('uk-UA')}<br>—<br>${to.toLocaleString('uk-UA')}</td>`;
 
-    const patrol=((t-pStart)/3600000%96+96)%96<24;
+    // Перевірка чи є патруль в цей період
+    const hoursFromPatrolStart = (t - pStart) / 3600000;
+    const patrol = ((hoursFromPatrolStart % PATROL_CYCLE + PATROL_CYCLE) % PATROL_CYCLE) < PATROL_DURATION;
 
     crew.forEach(c=>{
-      let cyc=((t-c.d)/3600000%72+72)%72;
-      if(cyc<48){
-        c.h+=12;
+      // Розрахунок позиції в циклі чергування
+      const hoursFromStart = (t - c.d) / 3600000;
+      const cyclePosition = ((hoursFromStart % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH);
+      
+      if(cyclePosition < SHIFT_ON){
+        c.h += STEP;
         html+=patrol?'<td class="patrol">ДОЗОР</td>':'<td class="on">Чергування</td>';
-      } else html+='<td class="off">Відпочинок</td>';
+      } else {
+        html+='<td class="off">Відпочинок</td>';
+      }
     });
     html+='</tr>';
   }
@@ -263,7 +316,7 @@ async function shareTable(){
     'grafik.html',
     {type:'text/html'}
   );
-  if(navigator.canShare({files:[file]}))
+  if(navigator.canShare&&navigator.canShare({files:[file]}))
     navigator.share({files:[file]});
   else alert('Передача не підтримується');
 }
