@@ -3,224 +3,271 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Калькулятор витрат палива</title>
+<title>Калькулятор витрат палива — Командирський</title>
 <style>
-body {
-    font-family: Arial, sans-serif;
-    background-color: #2b2b2b;
-    color: #eee;
-    margin: 0;
-    padding: 10px;
-}
-.calculator {
-    background-color: #3a3a3a;
-    border-radius: 10px;
-    padding: 20px;
-    max-width: 600px;
-    margin: auto;
-}
-.row {
-    display: flex;
-    align-items: center;
-    margin-bottom: 12px;
-}
-.row label {
-    flex: 1;
-    font-size: 18px;
-}
-.row input, .row select {
-    flex: 1;
-    font-size: 18px;
-    padding: 8px;
-    border-radius: 5px;
-    border: 1px solid #888;
-    background-color: #fff;
-    color: #000;
-}
-.row span.error-star {
-    color: red;
-    margin-left: 4px;
-}
-.buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: space-between;
-    margin-top: 20px;
-}
-button {
-    flex: 1;
-    font-size: 18px;
-    padding: 10px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: #007bff;
-    color: #fff;
-}
-button:hover {
-    background-color: #0056b3;
-}
-#resultv {
-    margin-top: 15px;
-    font-size: 18px;
-    background-color: #222;
-    padding: 10px;
-    border-radius: 5px;
-    word-wrap: break-word;
-}
-@media(max-width:480px){
-    .row label, .row input, .row select, button {
-        font-size: 16px;
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #1c1c1c;
+        color: #e0e0e0;
     }
-}
+
+    .calculator {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 15px;
+    }
+
+    .field-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #2f3e2f;
+        border-radius: 12px;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+        flex-wrap: wrap;
+    }
+
+    .field-row label {
+        flex: 1;
+        font-size: 18px;
+        color: #b8d2a3;
+        margin-right: 10px;
+        min-width: 120px;
+    }
+
+    .field-row input[type="text"],
+    .field-row input[type="number"],
+    .field-row input[type="date"] {
+        flex: 1;
+        max-width: 50%;
+        padding: 8px;
+        font-size: 18px;
+        border-radius: 8px;
+        border: 1px solid #555;
+        background-color: #1e1e1e;
+        color: #fff;
+    }
+
+    .field-row input::placeholder {
+        color: #888;
+    }
+
+    .error-star {
+        color: red;
+        margin-left: 4px;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    button {
+        flex: 1;
+        padding: 12px;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        color: #fff;
+        background: linear-gradient(145deg, #4a5b3a, #7fa34a);
+        box-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+        transition: 0.2s;
+        min-width: 100px;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+    }
+
+    #resultv {
+        margin-top: 20px;
+        font-size: 18px;
+        word-break: break-word;
+        color: #d1e8b2;
+        text-align: center;
+    }
+
+    @media (max-width: 480px) {
+        .field-row label {
+            font-size: 16px;
+            min-width: 100px;
+        }
+        .field-row input {
+            font-size: 16px;
+            max-width: 50%;
+            padding: 8px;
+        }
+        button {
+            font-size: 16px;
+            padding: 10px;
+        }
+    }
 </style>
 </head>
 <body>
 <div class="calculator">
-    <div class="row">
-        <label for="date">Дата:</label>
-        <input type="date" id="date">
-    </div>
-    <div class="row">
-        <label for="crewNumber">Номер екіпажу:</label>
-        <input type="text" id="crewNumber" placeholder="Введіть номер екіпажу">
-        <span class="error-star" id="crewNumberError"></span>
-    </div>
-    <div class="row">
-        <label for="previousFuel">Залишок палива на попередній день:</label>
-        <input type="number" id="previousFuel">
-        <span class="error-star" id="previousFuelError"></span>
-    </div>
-    <div class="row">
-        <label for="fuelReceived">Приход палива:</label>
-        <input type="number" id="fuelReceived">
-        <span class="error-star" id="fuelReceivedError"></span>
-    </div>
-    <div class="row">
-        <label for="startSpeedometer">Спідометр початковий:</label>
-        <input type="number" id="startSpeedometer">
-        <span class="error-star" id="startSpeedometerError"></span>
-    </div>
-    <div class="row">
-        <label for="endSpeedometer">Спідометр кінцевий:</label>
-        <input type="number" id="endSpeedometer">
-        <span class="error-star" id="endSpeedometerError"></span>
-    </div>
-    <div class="row">
-        <label for="highwayDistance">Колона +10%:</label>
-        <input type="number" id="highwayDistance" value="0">
-        <span class="error-star" id="highwayError"></span>
-    </div>
-    <div class="row">
-        <label for="streetDistance">Траса -15%:</label>
-        <input type="number" id="streetDistance" value="0">
-        <span class="error-star" id="streetError"></span>
-    </div>
-    <div class="row">
-        <label for="offroadDistance">Бездоріжжя +30%:</label>
-        <input type="number" id="offroadDistance" value="0">
-        <span class="error-star" id="offroadError"></span>
-    </div>
+<h1 style="text-align:center; color:#b8d2a3;">Калькулятор витрат палива</h1>
 
-    <div class="buttons">
-        <button onclick="calculate()">Результат</button>
-        <button onclick="shareResultv()">Поширити</button>
-        <button onclick="window.location.href='./index.html'">Меню</button>
-    </div>
-    <div id="resultv"></div>
+<div class="field-row">
+    <label>Виберіть дату</label>
+    <input type="date" id="date">
 </div>
 
+<div class="field-row">
+    <label id="crewLabel">Номер екіпажу</label>
+    <input type="text" id="crewNumber" placeholder="Введіть номер екіпажу">
+</div>
+
+<div class="field-row">
+    <label id="prevFuelLabel">Залишок палива</label>
+    <input type="number" id="previousFuel" placeholder="л">
+</div>
+
+<div class="field-row">
+    <label id="fuelRecLabel">Приход палива</label>
+    <input type="number" id="fuelReceived" placeholder="л">
+</div>
+
+<div class="field-row">
+    <label id="startLabel">Спідометр попередній</label>
+    <input type="number" id="startSpeedometer" placeholder="км">
+</div>
+
+<div class="field-row">
+    <label id="endLabel">Кінцевий спідометр</label>
+    <input type="number" id="endSpeedometer" placeholder="км">
+</div>
+
+<div class="field-row">
+    <label id="highwayLabel">Колона +10%</label>
+    <input type="number" id="highwayDistance" placeholder="км">
+</div>
+
+<div class="field-row">
+    <label id="streetLabel">Траса -15%</label>
+    <input type="number" id="streetDistance" placeholder="км">
+</div>
+
+<div class="field-row">
+    <label id="offroadLabel">Бездоріжжя +30%</label>
+    <input type="number" id="offroadDistance" placeholder="км">
+</div>
+
+<div class="buttons">
+    <button onclick="calculate()">Результат</button>
+    <button onclick="shareResultv()">Поширити</button>
+    <button onclick="window.history.back()">Меню</button>
+</div>
+
+<p id="resultv"></p>
+
 <script>
-// Дата за замовчуванням = сьогодні + 1 день
-let today = new Date();
-today.setDate(today.getDate()+1);
-document.getElementById('date').value = today.toISOString().substr(0,10);
+// Дата за замовчуванням: поточна + 1 день
+var tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+document.getElementById('date').valueAsDate = tomorrow;
 
-// Відновлюємо дані з localStorage
-const fields = ['crewNumber','previousFuel','fuelReceived','startSpeedometer','endSpeedometer','highwayDistance','streetDistance','offroadDistance'];
-fields.forEach(f=>{
-    if(localStorage.getItem(f)){
-        document.getElementById(f).value = localStorage.getItem(f);
-    }
-});
-// startSpeedometer автоматично з попереднього endSpeedometer
-if(localStorage.getItem('endSpeedometer')){
-    document.getElementById('startSpeedometer').value = localStorage.getItem('endSpeedometer');
+// Підвантаження збережених даних
+if(localStorage.getItem('crewNumber')) {
+    document.getElementById('crewNumber').value = localStorage.getItem('crewNumber');
+}
+if(localStorage.getItem('previousFuel')) {
+    document.getElementById('previousFuel').value = localStorage.getItem('previousFuel');
+}
+if(localStorage.getItem('startSpeedometer')) {
+    document.getElementById('startSpeedometer').value = localStorage.getItem('startSpeedometer');
 }
 
-// Зберігаємо всі дані при зміні
-fields.forEach(f=>{
-    document.getElementById(f).addEventListener('change', function(){
-        localStorage.setItem(f, this.value);
+// Масив полів і відповідних лейблів для перевірки
+const fields = [
+    {id: 'crewNumber', label: 'crewLabel'},
+    {id: 'previousFuel', label: 'prevFuelLabel'},
+    {id: 'fuelReceived', label: 'fuelRecLabel'},
+    {id: 'startSpeedometer', label: 'startLabel'},
+    {id: 'endSpeedometer', label: 'endLabel'},
+    {id: 'highwayDistance', label: 'highwayLabel'},
+    {id: 'streetDistance', label: 'streetLabel'},
+    {id: 'offroadDistance', label: 'offroadLabel'}
+];
+
+function formatDate(inputDate) {
+    var dateParts = inputDate.split("-");
+    return dateParts[2] + "-" + dateParts[1] + "-" + dateParts[0];
+}
+
+function calculate() {
+    let allValid = true;
+
+    // Очищаємо старі зірочки
+    fields.forEach(f => {
+        document.getElementById(f.label).innerHTML = document.getElementById(f.label).innerText.replace(' *', '');
     });
-});
 
-function clearErrors(){
-    document.querySelectorAll('.error-star').forEach(s=>s.textContent='');
-}
+    // Перевірка числових полів та номера екіпажу
+    fields.forEach(f => {
+        const val = document.getElementById(f.id).value.trim();
+        if (val === '' || (f.id !== 'crewNumber' && isNaN(parseFloat(val)))) {
+            document.getElementById(f.label).innerHTML += ' <span class="error-star">*</span>';
+            allValid = false;
+        }
+    });
 
-function calculate(){
-    clearErrors();
-    let valid = true;
-
-    const crewNumber = document.getElementById('crewNumber').value.trim();
-    if(!crewNumber){document.getElementById('crewNumberError').textContent='*'; valid=false;}
-
-    const previousFuel = parseFloat(document.getElementById('previousFuel').value);
-    if(isNaN(previousFuel)){document.getElementById('previousFuelError').textContent='*'; valid=false;}
-
-    const fuelReceived = parseFloat(document.getElementById('fuelReceived').value);
-    if(isNaN(fuelReceived)){document.getElementById('fuelReceivedError').textContent='*'; valid=false;}
-
-    const startSpeedometer = parseFloat(document.getElementById('startSpeedometer').value);
-    if(isNaN(startSpeedometer)){document.getElementById('startSpeedometerError').textContent='*'; valid=false;}
-
-    const endSpeedometer = parseFloat(document.getElementById('endSpeedometer').value);
-    if(isNaN(endSpeedometer)){document.getElementById('endSpeedometerError').textContent='*'; valid=false;}
-
-    const highway = parseFloat(document.getElementById('highwayDistance').value);
-    if(isNaN(highway)){document.getElementById('highwayError').textContent='*'; valid=false;}
-
-    const street = parseFloat(document.getElementById('streetDistance').value);
-    if(isNaN(street)){document.getElementById('streetError').textContent='*'; valid=false;}
-
-    const offroad = parseFloat(document.getElementById('offroadDistance').value);
-    if(isNaN(offroad)){document.getElementById('offroadError').textContent='*'; valid=false;}
-
-    if(!valid){
-        alert('Будь ласка, введіть всі числові значення та номер екіпажу!');
+    if (!allValid) {
+        alert('Будь ласка, введіть всі числові значення');
         return;
     }
 
-    const difference = endSpeedometer - startSpeedometer;
-    const totalDistance = highway + street + offroad;
-    const highwayFuel = Math.round((highway/100)*15.9 + (highway/100)*15.9*0.10);
-    const streetFuel = Math.round((street/100)*15.9 - (street/100)*15.9*0.15);
-    const offroadFuel = Math.round((offroad/100)*15.9 + (offroad/100)*15.9*0.30);
-    const totalFuel = highwayFuel + streetFuel + offroadFuel;
-    const remainingFuel = previousFuel - totalFuel + fuelReceived;
+    var date = document.getElementById('date').value;
+    var crewNumber = document.getElementById('crewNumber').value;
+    var previousFuel = parseFloat(document.getElementById('previousFuel').value);
+    var fuelReceived = parseFloat(document.getElementById('fuelReceived').value);
+    var startSpeedometer = parseFloat(document.getElementById('startSpeedometer').value);
+    var endSpeedometer = parseFloat(document.getElementById('endSpeedometer').value);
+    var highwayDistance = parseFloat(document.getElementById('highwayDistance').value);
+    var streetDistance = parseFloat(document.getElementById('streetDistance').value);
+    var offroadDistance = parseFloat(document.getElementById('offroadDistance').value);
 
-    const date = document.getElementById('date').value.split('-').reverse().join('-');
+    var difference = endSpeedometer - startSpeedometer;
+    var totalDistance = highwayDistance + streetDistance + offroadDistance;
 
-    const result = `${date}_№${crewNumber}_${previousFuel}л_заправка ${fuelReceived}л_${endSpeedometer}_${difference}км_колона ${highway}км_траса ${street}км_бездоріжжя ${offroad}км_${totalFuel}л_${remainingFuel}л`;
+    if (difference !== totalDistance) {
+        alert('Різниця спідометра не відповідає сумі відстаней доріг');
+        return;
+    }
 
-    document.getElementById('resultv').innerText = result;
+    var highwayFuel = Math.round((highwayDistance / 100) * 15.9 * 1.10);
+    var streetFuel = Math.round((streetDistance / 100) * 15.9 * 0.85);
+    var offroadFuel = Math.round((offroadDistance / 100) * 15.9 * 1.30);
+    var totalFuel = highwayFuel + streetFuel + offroadFuel;
 
-    // Зберігаємо дані
-    fields.forEach(f=>{
-        localStorage.setItem(f, document.getElementById(f).value);
-    });
-    localStorage.setItem('endSpeedometer', endSpeedometer);
-    document.getElementById('startSpeedometer').value = endSpeedometer;
+    var remainingFuel = previousFuel - totalFuel + fuelReceived;
+
+    var formattedDate = formatDate(date);
+    var resultv = formattedDate + "_№" + crewNumber + "_" + previousFuel + "л_заправка " + fuelReceived + "л_" + endSpeedometer + "_" + difference + "км_колона " + highwayDistance + "км_траса " + streetDistance + "км_бездоріжжя " + offroadDistance + "км_" + totalFuel + "л_" + remainingFuel + "л";
+
+    document.getElementById('resultv').innerText = resultv;
+
+    // Збереження даних
+    localStorage.setItem('crewNumber', crewNumber);
+    localStorage.setItem('previousFuel', remainingFuel); // новий залишок палива
+    localStorage.setItem('startSpeedometer', endSpeedometer); // старт = кінцевий
 }
 
-// Поширити результат
-function shareResultv(){
-    const resultTextv = document.getElementById('resultv').innerText;
-    if(navigator.share){
-        navigator.share({text: resultTextv}).then(()=>{}).catch(err=>alert('Помилка: '+err));
-    } else{
-        alert('Ваша система не підтримує обмін файлами.');
+function shareResultv() {
+    var resultTextv = document.getElementById('resultv').innerText;
+    if (navigator.share) {
+        navigator.share({text: resultTextv}).catch(err => alert('Помилка: ' + err));
+    } else {
+        alert('Обмін недоступний на цьому пристрої');
     }
 }
 </script>
