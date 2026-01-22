@@ -184,18 +184,21 @@ if(localStorage.getItem('crewNumber')) {
 if(localStorage.getItem('previousFuel')) {
     document.getElementById('previousFuel').value = localStorage.getItem('previousFuel');
 }
-if(localStorage.getItem('startSpeedometer')) {
+if(localStorage.getItem('fuelReceived')) {
+    document.getElementById('fuelReceived').value = localStorage.getItem('fuelReceived');
+}
+    if(localStorage.getItem('startSpeedometer')) {
     document.getElementById('startSpeedometer').value = localStorage.getItem('startSpeedometer');
 }
-if(localStorage.getItem('highwayDistance')) {
+if(localStorage.getItem('highwayDistance=0')) {
     document.getElementById('highwayDistance').value = localStorage.getItem('highwayDistance');
 }
-if(localStorage.getItem('streetDistance')) {
-    document.getElementById('streetDistance').value = localStorage.getItem('streetDistance');
-}
-if(localStorage.getItem('offroadDistance')) {
-    document.getElementById('offroadDistance').value = localStorage.getItem('offroadDistance');
-}
+// if(localStorage.getItem('streetDistance')) {
+//    document.getElementById('streetDistance').value = localStorage.getItem('streetDistance');
+//}
+// if(localStorage.getItem('offroadDistance')) {
+//    document.getElementById('offroadDistance').value = localStorage.getItem('offroadDistance');
+// р}
 
 // Масив полів і відповідних лейблів для перевірки
 const fields = [
