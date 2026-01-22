@@ -165,6 +165,7 @@
 <div class="buttons">
     <button onclick="calculate()">Результат</button>
     <button onclick="shareResultv()">Поширити</button>
+    <button onclick="copyResult()">Скопіювати</button>
     <button onclick="window.history.back()">Меню</button>
 </div>
 
@@ -185,6 +186,15 @@ if(localStorage.getItem('previousFuel')) {
 }
 if(localStorage.getItem('startSpeedometer')) {
     document.getElementById('startSpeedometer').value = localStorage.getItem('startSpeedometer');
+}
+if(localStorage.getItem('highwayDistance')) {
+    document.getElementById('highwayDistance').value = localStorage.getItem('highwayDistance');
+}
+if(localStorage.getItem('streetDistance')) {
+    document.getElementById('streetDistance').value = localStorage.getItem('streetDistance');
+}
+if(localStorage.getItem('offroadDistance')) {
+    document.getElementById('offroadDistance').value = localStorage.getItem('offroadDistance');
 }
 
 // Масив полів і відповідних лейблів для перевірки
@@ -258,8 +268,11 @@ function calculate() {
 
     // Збереження даних
     localStorage.setItem('crewNumber', crewNumber);
-    localStorage.setItem('previousFuel', remainingFuel); // новий залишок палива
-    localStorage.setItem('startSpeedometer', endSpeedometer); // старт = кінцевий
+    localStorage.setItem('previousFuel', remainingFuel);
+    localStorage.setItem('startSpeedometer', endSpeedometer);
+    localStorage.setItem('highwayDistance', highwayDistance);
+    localStorage.setItem('streetDistance', streetDistance);
+    localStorage.setItem('offroadDistance', offroadDistance);
 }
 
 function shareResultv() {
@@ -268,6 +281,17 @@ function shareResultv() {
         navigator.share({text: resultTextv}).catch(err => alert('Помилка: ' + err));
     } else {
         alert('Обмін недоступний на цьому пристрої');
+    }
+}
+
+function copyResult() {
+    var resultTextv = document.getElementById('resultv').innerText;
+    if(resultTextv) {
+        navigator.clipboard.writeText(resultTextv)
+        .then(() => alert('Результат скопійовано'))
+        .catch(err => alert('Помилка копіювання: ' + err));
+    } else {
+        alert('Немає результату для копіювання');
     }
 }
 </script>
