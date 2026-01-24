@@ -6,95 +6,356 @@
     <title>Сокіл</title>
     <!-- Мета теги для PWA -->
     <meta name="description" content="Програма для збереження і обробки даних">
-    <meta name="theme-color" content="#333333">
+    <meta name="theme-color" content="#1a3a1a">
     
     <!-- Посилання на маніфест -->
     <link rel="manifest" href="manifest.json">
     <style>
-        body {
-            font-family: Arial, sans-serif;
+        /* Базові стилі та скидання */
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            background-image: url('https://example.com/background-image.jpg'); /* Замінити на фон з ППО */
-            background-size: cover;
-            background-position: center;
-            color: #ffffff;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(21, 71, 21, 0.4) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(42, 42, 42, 0.5) 0%, transparent 40%),
+                linear-gradient(135deg, #0c2c0c 0%, #1a3a1a 30%, #2d4a2d 100%);
+            background-attachment: fixed;
+            color: #f0f0f0;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
+        
+        /* Додаткові військові деталі фону */
+        body::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.1) 2px, rgba(0, 0, 0, 0.1) 4px);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Контейнер форми */
         .form-container {
+            position: relative;
+            z-index: 1;
             text-align: center;
-            background: rgba(0, 0, 0, 0.8); /* Прозорий чорний фон */
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-            padding: 20px 30px;
-            width: 90%;
-            max-width: 400px;
+            background: rgba(13, 29, 13, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px 25px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 
+                0 15px 35px rgba(0, 0, 0, 0.5),
+                0 5px 15px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            animation: fadeIn 0.8s ease-out;
         }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Заголовок */
         h2 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: #00ff00; /* Зелений колір для військової тематики */
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            color: #c8e6c9;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            font-weight: 700;
+            letter-spacing: 1px;
+            position: relative;
+            padding-bottom: 15px;
         }
+        
+        h2::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #4caf50, transparent);
+            border-radius: 2px;
+        }
+        
+        /* Контейнер опцій */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 18px;
+            margin-top: 10px;
+        }
+        
+        /* Стилі для опцій (3D кнопки) */
         .option {
-            margin: 15px 0;
+            position: relative;
+            perspective: 1000px;
+            height: 80px;
         }
-        .option label {
-            cursor: pointer;
-            display: block;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1); /* Легкий білий фон */
-            border: 1px solid #00ff00;
-            border-radius: 5px;
-            color: #ffffff;
-            font-size: 1.2rem;
-            transition: background-color 0.3s, transform 0.2s;
-        }
-        .option label:hover {
-            background-color: rgba(0, 255, 0, 0.2);
-            transform: scale(1.05);
-        }
-        input[type="radio"] {
+        
+        .option input[type="radio"] {
             display: none;
         }
-        input[type="radio"]:checked + label {
-            background-color: rgba(0, 255, 0, 0.4);
-            border-color: #ffffff;
+        
+        .option label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #2d4a2d, #1a3a1a);
+            border-radius: 12px;
+            color: #e0e0e0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 6px 0 #0c2c0c,
+                0 8px 15px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            transform-style: preserve-3d;
+            transform: translateZ(0);
+            user-select: none;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Ефект наведення */
+        .option label:hover {
+            background: linear-gradient(145deg, #3d5a3d, #2a4a2a);
+            transform: translateY(-3px) translateZ(10px);
+            box-shadow: 
+                0 9px 0 #0c2c0c,
+                0 12px 20px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Ефект активного стану (натискання) */
+        .option label:active {
+            transform: translateY(3px) translateZ(0);
+            box-shadow: 
+                0 3px 0 #0c2c0c,
+                0 4px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.1s ease;
+        }
+        
+        /* Вибрана опція */
+        .option input[type="radio"]:checked + label {
+            background: linear-gradient(145deg, #4caf50, #388e3c);
+            color: #ffffff;
+            box-shadow: 
+                0 4px 0 #1b5e20,
+                0 6px 15px rgba(76, 175, 80, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(76, 175, 80, 0.5);
+            transform: translateY(2px) translateZ(5px);
+        }
+        
+        .option input[type="radio"]:checked + label::before {
+            content: "✓";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            background: #1b5e20;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+        }
+        
+        /* Адаптивність для планшетів */
+        @media (max-width: 768px) {
+            .form-container {
+                padding: 25px 20px;
+                max-width: 90%;
+                border-radius: 16px;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+                margin-bottom: 25px;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .option label {
+                height: 75px;
+                font-size: 1rem;
+            }
+        }
+        
+        /* Адаптивність для смартфонів */
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+                background: linear-gradient(135deg, #0c2c0c 0%, #1a3a1a 100%);
+            }
+            
+            .form-container {
+                padding: 20px 15px;
+                max-width: 95%;
+                border-radius: 14px;
+            }
+            
+            h2 {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+            }
+            
+            .options-grid {
+                gap: 12px;
+            }
+            
+            .option {
+                height: 70px;
+            }
+            
+            .option label {
+                height: 70px;
+                font-size: 0.95rem;
+                padding: 0 15px;
+            }
+            
+            .option input[type="radio"]:checked + label::before {
+                top: 6px;
+                right: 6px;
+                width: 18px;
+                height: 18px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Покращення для великих екранів */
+        @media (min-width: 1200px) {
+            .form-container {
+                max-width: 550px;
+                padding: 40px 35px;
+            }
+            
+            .options-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+            
+            .option label {
+                height: 85px;
+                font-size: 1.15rem;
+            }
+        }
+        
+        /* Анімація завантаження кнопок */
+        .option:nth-child(1) label { animation-delay: 0.1s; }
+        .option:nth-child(2) label { animation-delay: 0.2s; }
+        .option:nth-child(3) label { animation-delay: 0.3s; }
+        .option:nth-child(4) label { animation-delay: 0.4s; }
+        .option:nth-child(5) label { animation-delay: 0.5s; }
+        .option:nth-child(6) label { animation-delay: 0.6s; }
+        .option:nth-child(7) label { animation-delay: 0.7s; }
+        
+        .option label {
+            animation: buttonAppear 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes buttonAppear {
+            from { opacity: 0; transform: translateY(15px) translateZ(0); }
+            to { opacity: 1; transform: translateY(0) translateZ(0); }
+        }
+        
+        /* Іконки (можна додати через псевдоелементи) */
+        .option label::after {
+            content: "";
+            position: absolute;
+            left: 15px;
+            width: 24px;
+            height: 24px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            opacity: 0.8;
+        }
+        
+        #ppo_sms + label::after { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>'); }
+        #bch + label::after { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'); }
+        #grafik + label::after { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>'); }
+        #sms + label::after { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>'); }
+        #raport + label::after { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>'); }
+        #zhur + label::after { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>'); }
+        #avtoservis + label::after { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>'); }
+        
+        /* Адаптація іконок для мобільних */
+        @media (max-width: 480px) {
+            .option label::after {
+                width: 20px;
+                height: 20px;
+                left: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="form-container">
         <h2>Оберіть опцію:</h2>
-        <div class="option">
-            <input type="radio" id="ppo_sms" name="option" value="https://bankir2000.github.io/ppo/">
-            <label for="ppo_sms">ППО СМС</label>
-        </div>
-        <div class="option">
-            <input type="radio" id="bch" name="option" value="./bch.html">
-            <label for="bch">БЧ</label>
-        </div>
-        <div class="option">
-            <input type="radio" id="grafik" name="option" value="./grafik.html">
-            <label for="grafik">Графік чергування</label>
-        </div>
-        <div class="option">
-            <input type="radio" id="sms" name="option" value="./sms_drivers.html">
-            <label for="sms">СМС для водіїв</label>
-        </div>
-        <div class="option">
-            <input type="radio" id="raport" name="option" value="./raport.html">
-            <label for="raport">Рапорт</label>
-        </div>
-        <div class="option">
-            <input type="radio" id="zhur" name="option" value="./zhur.html">
-            <label for="zhur">Журнал</label>
-        </div>
-        <div class="option">
-            <input type="radio" id="avtoservis" name="option" value="./avtoservis.html">
-            <label for="avtoservis">Сервіс ТО автомобіля</label>
+        <div class="options-grid">
+            <div class="option">
+                <input type="radio" id="ppo_sms" name="option" value="https://bankir2000.github.io/ppo/">
+                <label for="ppo_sms">ППО СМС</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="bch" name="option" value="./bch.html">
+                <label for="bch">БЧ</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="grafik" name="option" value="./grafik.html">
+                <label for="grafik">Графік чергування</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="sms" name="option" value="./sms_drivers.html">
+                <label for="sms">СМС для водіїв</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="raport" name="option" value="./raport.html">
+                <label for="raport">Рапорт</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="zhur" name="option" value="./zhur.html">
+                <label for="zhur">Журнал</label>
+            </div>
+            <div class="option">
+                <input type="radio" id="avtoservis" name="option" value="./avtoservis.html">
+                <label for="avtoservis">Сервіс ТО автомобіля</label>
+            </div>
         </div>
     </div>
 
@@ -102,10 +363,36 @@
         document.querySelectorAll('input[name="option"]').forEach(option => {
             option.addEventListener('change', function() {
                 if (this.checked) {
-                    window.location.href = this.value; // Перехід на вибраний HTML або зовнішнє посилання
+                    // Додаємо ефект натискання
+                    const label = this.nextElementSibling;
+                    label.style.transform = 'translateY(4px) translateZ(0)';
+                    
+                    setTimeout(() => {
+                        window.location.href = this.value;
+                    }, 150);
                 }
             });
         });
+        
+        // Додаємо обробку сенсорних подій для кращої взаємодії на мобільних
+        document.querySelectorAll('.option label').forEach(label => {
+            label.addEventListener('touchstart', function() {
+                this.style.transform = 'translateY(3px) translateZ(0)';
+                this.style.boxShadow = '0 3px 0 #0c2c0c, 0 4px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)';
+            });
+            
+            label.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.transform = 'translateY(0) translateZ(0)';
+                    this.style.boxShadow = '0 6px 0 #0c2c0c, 0 8px 15px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)';
+                }, 100);
+            });
+        });
+        
+        // Оптимізація анімацій для мобільних пристроїв
+        if ('ontouchstart' in window) {
+            document.documentElement.style.touchAction = 'manipulation';
+        }
     </script>
 </body>
 </html>
