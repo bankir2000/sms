@@ -2,135 +2,293 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>Рапорт</title>
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
 <style>
-body{
-    margin:0;
-    background:#1a1a1a;
-    font-family:Arial, sans-serif;
-    color:#fff;
-    user-select:none;
-}
-.controls{
-    background:#2b2b2b;
-    border-left:5px solid #4caf50;
-    padding:15px;
-    position:sticky;
-    top:0;
-    z-index:1000;
-}
-textarea{
-    width:100%;
-    height:90px;
-    margin-bottom:12px;
-    padding:10px;
-    font-size:16px;
-    font-family:Arial, sans-serif;
-    border:2px solid #4caf50;
-    border-radius:6px;
-    background:#1e1e1e;
-    color:#fff;
-    resize:none;
-}
-#signature-pad{
-    width:100%;
-    height:140px;
-    border:2px solid #4caf50;
-    border-radius:6px;
-    background:#f0f0f0;
-    margin-bottom:10px;
-    touch-action:none;
-}
-button{
-    width:32%;
-    margin:5px 1%;
-    padding:12px;
-    font-size:16px;
-    font-weight:bold;
-    color:#fff;
-    background:#4caf50;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
+:root {
+    --primary-color: #4caf50;
+    --bg-dark: #1a1a1a;
+    --bg-medium: #2b2b2b;
+    --text-light: #ffffff;
 }
 
-.paper{
-    width:210mm;
-    height:297mm;
-    margin:20px auto;
-    padding:25mm 20mm 20mm 30mm;
-    background:white;
-    color:#1a1a1a;
-    font-family:Arial, sans-serif;
-    font-size:26px;
-    line-height:1.6;
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.header-right{
-    text-align:right;
-    margin-bottom:40px;
-    white-space:pre-line;
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-dark);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    color: var(--text-light);
+    user-select: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
 }
 
-.title{
-    text-align:center;
-    margin-bottom:25px;
+.controls {
+    background: var(--bg-medium);
+    border-left: 5px solid var(--primary-color);
+    padding: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.block{
-    margin-top:15px;
-    white-space:pre-line;
+.controls b {
+    display: block;
+    margin: 12px 0 6px;
+    font-size: 16px;
+    color: #e0e0e0;
 }
 
-#block1{
-    text-align:justify; /* вирівнювання по ширині */
+textarea {
+    width: 100%;
+    height: 90px;
+    margin-bottom: 15px;
+    padding: 12px;
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    background: #1e1e1e;
+    color: var(--text-light);
+    resize: none;
+    -webkit-appearance: none;
+    appearance: none;
+    touch-action: manipulation;
 }
 
-.spacer{
-    height:120px;
+textarea:focus {
+    outline: none;
+    border-color: #66bb6a;
 }
 
-/* --- Футер --- */
-.pos-sign-name-row{
-    display:flex;
-    align-items:flex-end;
-    justify-content:space-between;
-    gap:20px;
+#signature-pad {
+    width: 100%;
+    height: 180px;
+    border: 2px solid var(--primary-color);
+    border-radius: 8px;
+    background: #f0f0f0;
+    margin-bottom: 15px;
+    touch-action: none;
+    display: block;
 }
 
-.signature-inline img{
-    height:80px;
+.button-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
 }
 
-#nameBlock{
-    white-space:nowrap;
+button {
+    flex: 1;
+    min-width: 120px;
+    padding: 14px 10px;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-light);
+    background: var(--primary-color);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
 }
 
-.modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.7);
-    justify-content:center;
-    align-items:center;
-    z-index:2000;
+button:active {
+    transform: scale(0.98);
+    background: #388e3c;
 }
-.modal-content{
-    background:#2b2b2b;
-    padding:20px;
-    width:90%;
-    max-width:500px;
-    border-radius:8px;
+
+.settings-btn {
+    width: 100%;
+    margin: 5px 0 15px;
+    background: #ff9800;
 }
-.settings-btn{
-    width:100%;
-    margin-bottom:12px;
-    background:#ff9800;
+
+.settings-btn:active {
+    background: #f57c00;
+}
+
+/* Стилі А4 для збереження */
+#raportPage {
+    width: 794px; /* 210mm при 96 DPI */
+    height: 1123px; /* 297mm при 96 DPI */
+    background: white;
+    color: #000000;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 14pt;
+    line-height: 1.5;
+    position: absolute;
+    left: -9999px;
+    top: -9999px;
+    z-index: 10000;
+    overflow: hidden;
+    page-break-inside: avoid;
+}
+
+/* Контейнер вмісту А4 */
+.raport-content {
+    width: 100%;
+    height: 100%;
+    padding: 100px 113px 80px 113px; /* 25mm 30mm 20mm 30mm при 96 DPI */
+    box-sizing: border-box;
+}
+
+/* Адресата праворуч */
+.recipient {
+    text-align: right;
+    margin-bottom: 60px; /* 15mm */
+    white-space: pre-line;
+    line-height: 1.5;
+    font-size: 14pt;
+}
+
+/* Заголовок "Рапорт" */
+.report-title {
+    text-align: center;
+    margin-bottom: 45px; /* 11mm */
+    font-size: 16pt;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Початок тексту */
+.report-text-start {
+    margin-bottom: 20px;
+    font-size: 14pt;
+}
+
+/* Блок з основним текстом */
+.text-block {
+    white-space: pre-line;
+    text-align: justify;
+    line-height: 1.5;
+    font-size: 14pt;
+    margin-bottom: 10px;
+}
+
+#block1 {
+    text-indent: 35px;
+    margin-bottom: 30px;
+}
+
+/* Блок "На БЧ" */
+#block2 {
+    text-align: left;
+    white-space: pre-line;
+    line-height: 1.5;
+    margin-bottom: 150px; /* Простір для підпису */
+}
+
+/* Позиціонування підпису, посади та ПІБ */
+.signature-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    position: absolute;
+    bottom: 150px;
+    left: 113px;
+    right: 113px;
+}
+
+.position-block {
+    text-align: left;
+    width: 200px;
+    font-size: 12pt;
+    white-space: pre-line;
+}
+
+.signature-image-block {
+    text-align: center;
+    width: 250px;
+}
+
+.signature-image-block img {
+    height: 60px;
+    max-width: 200px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.name-block {
+    text-align: right;
+    width: 200px;
+    font-size: 12pt;
+    white-space: pre-line;
+}
+
+/* Дата - ПЕРЕНЕСЕНА НА ЛІВИЙ БІК */
+.date-block {
+    position: absolute;
+    bottom: 100px;
+    left: 113px; /* Змінено з right на left */
+    font-size: 11pt;
+}
+
+/* Модальне вікно налаштувань */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: var(--bg-medium);
+    padding: 25px;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-content b {
+    display: block;
+    margin: 15px 0 8px;
+    color: #e0e0e0;
+}
+
+.modal-content textarea {
+    height: 70px;
+}
+
+/* Індикатор завантаження */
+.loading {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 20px 30px;
+    border-radius: 10px;
+    z-index: 3000;
+    font-size: 18px;
 }
 </style>
 </head>
@@ -138,165 +296,379 @@ button{
 <body>
 
 <div class="controls">
-
-<button class="settings-btn" onclick="openModal()">Налаштування рапорту</button>
-
-<b>Вставте смс по застосуванню:</b>
-<textarea id="text1"></textarea>
-
-<b>Вставте смс хто на БЧ:</b>
-<textarea id="text2"></textarea>
-
-<b>Підпис пальцем або стилусом:</b>
-<canvas id="signature-pad"></canvas>
-
-<div style="display:flex;justify-content:space-between;">
-<button onclick="clearPad()">Очистити підпис</button>
-<button onclick="applySignature()">Застосувати підпис</button>
-<button onclick="shareRaport()">Поширити</button>
-</div>
-</div>
-
-<!-- Модальне вікно -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <b>Командиру</b>
-    <textarea id="cmdInput"></textarea>
-
-    <b>Посада</b>
-    <textarea id="posInput"></textarea>
-
-    <b>ПІБ</b>
-    <textarea id="nameInput"></textarea>
-
-    <div style="display:flex;justify-content:space-between;margin-top:10px;">
-      <button onclick="saveSettings()">Зберегти</button>
-      <button onclick="closeModal()">Закрити</button>
+    <button class="settings-btn" onclick="openSettingsModal()">Налаштування рапорту</button>
+    
+    <b>Вставте смс по застосуванню:</b>
+    <textarea id="text1" placeholder="Введіть текст..."></textarea>
+    
+    <b>Вставте смс хто на БЧ:</b>
+    <textarea id="text2" placeholder="Введіть текст..."></textarea>
+    
+    <b>Підпис пальцем або стилусом:</b>
+    <canvas id="signature-pad"></canvas>
+    
+    <div class="button-row">
+        <button onclick="clearPad()">Очистити підпис</button>
+        <button onclick="applySignature()">Застосувати підпис</button>
+        <button onclick="shareRaport()">Поширити</button>
     </div>
-  </div>
 </div>
 
-<div class="paper" id="raportPage">
-  <div class="header-right" id="cmdBlock"></div>
-
-  <div class="title">Рапорт</div>
-  <div>Дійсним доповідаю, що:</div>
-
-  <div class="block" id="block1"></div>
-  <div class="block" id="block2"></div>
-
-  <div class="spacer"></div>
-
-  <!-- Футер -->
-  <div class="pos-sign-name-row">
-      <div id="posBlock"></div>
-
-      <div class="signature-inline">
-          <img id="signImg">
-      </div>
-
-      <div id="nameBlock"></div>
-  </div>
-
-  <div id="date" style="margin-top:10px;"></div>
+<!-- Прихована сторінка рапорту для збереження -->
+<div id="raportPage">
+    <div class="raport-content">
+        <div class="recipient" id="cmdBlock"></div>
+        
+        <div class="report-title">Рапорт</div>
+        <div class="report-text-start">Дійсним доповідаю, що:</div>
+        
+        <div class="text-block" id="block1"></div>
+        <div class="text-block" id="block2"></div>
+        
+        <div class="signature-row">
+            <div class="position-block" id="posBlock"></div>
+            <div class="signature-image-block">
+                <img id="signImg">
+            </div>
+            <div class="name-block" id="nameBlock"></div>
+        </div>
+        
+        <div class="date-block" id="date"></div>
+    </div>
 </div>
+
+<!-- Модальне вікно налаштувань -->
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <b>Командиру</b>
+        <textarea id="cmdInput" placeholder="Введіть дані командира"></textarea>
+        
+        <b>Посада</b>
+        <textarea id="posInput" placeholder="Введіть вашу посаду"></textarea>
+        
+        <b>ПІБ</b>
+        <textarea id="nameInput" placeholder="Введіть ваше ПІБ"></textarea>
+        
+        <div class="button-row" style="margin-top: 20px;">
+            <button onclick="saveSettings()">Зберегти</button>
+            <button onclick="closeSettingsModal()">Закрити</button>
+        </div>
+    </div>
+</div>
+
+<div class="loading" id="loading">Генерується рапорт А4...</div>
 
 <script>
-// Текстові блоки
-text1.oninput=()=>block1.innerText=text1.value;
-text2.oninput=()=>block2.innerText=text2.value;
+// Мобільна оптимізація
+(function() {
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
+})();
 
-// Дата
-date.innerText=new Date().toLocaleDateString('uk-UA');
+// Текстові блоки
+const text1 = document.getElementById('text1');
+const text2 = document.getElementById('text2');
+const block1 = document.getElementById('block1');
+const block2 = document.getElementById('block2');
+
+text1.addEventListener('input', () => {
+    block1.innerText = text1.value;
+});
+
+text2.addEventListener('input', () => {
+    block2.innerText = text2.value;
+});
+
+// Дата в правильному форматі з "р."
+const dateElement = document.getElementById('date');
+function updateDate() {
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = now.getFullYear();
+    dateElement.innerText = `${day}.${month}.${year} р.`;
+}
+updateDate();
 
 // Підпис
-const canvas=document.getElementById('signature-pad');
-const ctx=canvas.getContext('2d');
-canvas.width=canvas.offsetWidth;
-canvas.height=canvas.offsetHeight;
-let drawing=false;
+const canvas = document.getElementById('signature-pad');
+const ctx = canvas.getContext('2d');
+let drawing = false;
 
-canvas.onpointerdown=e=>{
-    drawing=true;
+// Адаптивний розмір canvas
+function resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    
+    ctx.scale(dpr, dpr);
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = '#000000';
+}
+
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// Функції для малювання
+function startDrawing(e) {
+    drawing = true;
     ctx.beginPath();
-    ctx.moveTo(e.offsetX,e.offsetY);
+    draw(e);
 }
-canvas.onpointermove=e=>{
-    if(!drawing)return;
-    ctx.lineTo(e.offsetX,e.offsetY);
+
+function draw(e) {
+    if (!drawing) return;
+    
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+    
+    if (e.type.includes('touch')) {
+        const touch = e.touches[0] || e.changedTouches[0];
+        x = touch.clientX - rect.left;
+        y = touch.clientY - rect.top;
+    } else {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+    }
+    
+    ctx.lineTo(x, y);
     ctx.stroke();
-}
-canvas.onpointerup=()=>drawing=false;
-
-function clearPad(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-}
-function applySignature(){
-    signImg.src=canvas.toDataURL();
+    ctx.beginPath();
+    ctx.moveTo(x, y);
 }
 
-// Витяг дати і часу з тексту
-function extractDateTime(text){
-    const match=text.match(/(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}).*?(\d{1,2}:\d{2})/);
-    if(match){
-        const parts=match[1].split(/[.\-/]/);
-        let day=parts[0].padStart(2,'0');
-        let month=parts[1].padStart(2,'0');
-        let year=parts[2].length===2 ? '20'+parts[2] : parts[2];
-        const time=match[2].replace(':','-');
-        return `${day}-${month}-${year}_${time}`;
+function stopDrawing() {
+    drawing = false;
+    ctx.beginPath();
+}
+
+// Додавання обробників подій
+canvas.addEventListener('mousedown', startDrawing);
+canvas.addEventListener('mousemove', draw);
+canvas.addEventListener('mouseup', stopDrawing);
+canvas.addEventListener('mouseout', stopDrawing);
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startDrawing(e);
+}, {passive: false});
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    draw(e);
+}, {passive: false});
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    stopDrawing();
+}, {passive: false});
+
+function clearPad() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    resizeCanvas();
+}
+
+function applySignature() {
+    const signImg = document.getElementById('signImg');
+    signImg.src = canvas.toDataURL();
+    localStorage.setItem('signature', signImg.src);
+}
+
+// Витяг дати і часу з тексту для імені файлу
+function extractDateTime(text) {
+    const match = text.match(/(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}).*?(\d{1,2}:\d{2})/);
+    if (match) {
+        const parts = match[1].split(/[.\-/]/);
+        let day = parts[0].padStart(2, '0');
+        let month = parts[1].padStart(2, '0');
+        let year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+        const time = match[2].replace(':', '-');
+        return `Рапорт_${day}-${month}-${year}_${time}`;
     }
     return null;
 }
 
-// Збереження в JPEG з потрібною назвою
-async function shareRaport(){
-    const c=await html2canvas(raportPage,{scale:2});
-    const blob=await new Promise(res=>c.toBlob(res,"image/jpeg",0.95));
-
-    let nameFromText=extractDateTime(text1.value);
-
-    let today=new Date();
-    let fileName=nameFromText ? nameFromText+".jpeg"
-        : `${String(today.getDate()).padStart(2,'0')}-${String(today.getMonth()+1).padStart(2,'0')}-${today.getFullYear()}.jpeg`;
-
-    const file=new File([blob],fileName,{type:"image/jpeg"});
-
-    if(navigator.share){
-        try{
-            await navigator.share({files:[file],title:"Рапорт"});
-        }catch(e){}
+// Генерація зображення А4
+async function shareRaport() {
+    const loading = document.getElementById('loading');
+    try {
+        loading.style.display = 'block';
+        
+        const raportPage = document.getElementById('raportPage');
+        
+        // Тимчасово показуємо рапорт
+        const originalPosition = raportPage.style.position;
+        const originalLeft = raportPage.style.left;
+        const originalTop = raportPage.style.top;
+        const originalZIndex = raportPage.style.zIndex;
+        const originalDisplay = raportPage.style.display;
+        
+        raportPage.style.position = 'fixed';
+        raportPage.style.left = '50%';
+        raportPage.style.top = '50%';
+        raportPage.style.transform = 'translate(-50%, -50%)';
+        raportPage.style.zIndex = '9999';
+        raportPage.style.display = 'block';
+        
+        // Очікуємо завантаження зображень
+        await waitForImages();
+        
+        const c = await html2canvas(raportPage, {
+            scale: 3,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            width: 794,
+            height: 1123,
+            windowWidth: 794,
+            windowHeight: 1123,
+            onclone: function(clonedDoc) {
+                const clonedPaper = clonedDoc.getElementById('raportPage');
+                clonedPaper.style.position = 'fixed';
+                clonedPaper.style.left = '0';
+                clonedPaper.style.top = '0';
+                clonedPaper.style.transform = 'none';
+                clonedPaper.style.display = 'block';
+            }
+        });
+        
+        // Повертаємо оригінальні стилі
+        raportPage.style.position = originalPosition;
+        raportPage.style.left = originalLeft;
+        raportPage.style.top = originalTop;
+        raportPage.style.transform = '';
+        raportPage.style.zIndex = originalZIndex;
+        raportPage.style.display = originalDisplay;
+        
+        // Конвертуємо в Blob
+        const blob = await new Promise(resolve => {
+            c.toBlob(resolve, "image/jpeg", 0.95);
+        });
+        
+        // Генерація імені файлу
+        let nameFromText = extractDateTime(text1.value);
+        let today = new Date();
+        let fileName = nameFromText ? nameFromText + ".jpg"
+            : `Рапорт_${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}.jpg`;
+        
+        const file = new File([blob], fileName, {type: "image/jpeg"});
+        
+        // Web Share API
+        if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: "Рапорт"
+                });
+                loading.style.display = 'none';
+                return;
+            } catch (e) {
+                console.log("Web Share API не підтримується:", e);
+            }
+        }
+        
+        // Fallback завантаження
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+            loading.style.display = 'none';
+        }, 100);
+        
+        alert(`Рапорт збережено як "${fileName}"`);
+        
+    } catch (error) {
+        console.error('Помилка при генерації рапорту:', error);
+        loading.style.display = 'none';
+        alert('Помилка при збереженні рапорту. Спробуйте ще раз.');
     }
-
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download=fileName;
-    a.click();
 }
 
-// Модалка + localStorage
-function openModal(){
-    modal.style.display="flex";
-    cmdInput.value=localStorage.getItem('cmd')||"";
-    posInput.value=localStorage.getItem('pos')||"";
-    nameInput.value=localStorage.getItem('name')||"";
+// Очікування завантаження зображень
+function waitForImages() {
+    const images = document.querySelectorAll('img');
+    const promises = Array.from(images).map(img => {
+        if (img.complete && img.naturalWidth !== 0) return Promise.resolve();
+        return new Promise(resolve => {
+            img.onload = resolve;
+            img.onerror = resolve;
+        });
+    });
+    return Promise.all(promises);
 }
-function closeModal(){
-    modal.style.display="none";
+
+// Модальне вікно налаштувань
+const settingsModal = document.getElementById('settingsModal');
+const cmdInput = document.getElementById('cmdInput');
+const posInput = document.getElementById('posInput');
+const nameInput = document.getElementById('nameInput');
+
+function openSettingsModal() {
+    settingsModal.style.display = 'flex';
+    cmdInput.value = localStorage.getItem('cmd') || "";
+    posInput.value = localStorage.getItem('pos') || "";
+    nameInput.value = localStorage.getItem('name') || "";
+    setTimeout(() => cmdInput.focus(), 100);
 }
-function saveSettings(){
-    localStorage.setItem('cmd',cmdInput.value);
-    localStorage.setItem('pos',posInput.value);
-    localStorage.setItem('name',nameInput.value);
+
+function closeSettingsModal() {
+    settingsModal.style.display = 'none';
+}
+
+function saveSettings() {
+    localStorage.setItem('cmd', cmdInput.value);
+    localStorage.setItem('pos', posInput.value);
+    localStorage.setItem('name', nameInput.value);
     applySettings();
-    closeModal();
+    closeSettingsModal();
 }
-function applySettings(){
-    cmdBlock.innerText=localStorage.getItem('cmd')||"Налаштуй рапорт";
-    posBlock.innerText=localStorage.getItem('pos')||"Налаштуй рапорт";
-    nameBlock.innerText=localStorage.getItem('name')||"Налаштуй рапорт";
+
+function applySettings() {
+    document.getElementById('cmdBlock').innerText = localStorage.getItem('cmd') || "Налаштуй рапорт";
+    document.getElementById('posBlock').innerText = localStorage.getItem('pos') || "Налаштуй рапорт";
+    document.getElementById('nameBlock').innerText = localStorage.getItem('name') || "Налаштуй рапорт";
 }
+
+// Закриття модалок по кліку на фон
+settingsModal.addEventListener('click', (e) => {
+    if (e.target === settingsModal) {
+        closeSettingsModal();
+    }
+});
+
+// Закриття модалок по Escape
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        if (settingsModal.style.display === 'flex') closeSettingsModal();
+    }
+});
+
+// Ініціалізація
 applySettings();
+
+// Відновлення автозбереженого тексту (тільки для налаштувань та підпису)
+window.addEventListener('load', () => {
+    // Відновлення підпису
+    const savedSignature = localStorage.getItem('signature');
+    if (savedSignature) {
+        document.getElementById('signImg').src = savedSignature;
+    }
+});
 </script>
 
 </body>
