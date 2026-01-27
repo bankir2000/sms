@@ -3,160 +3,345 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Збереження і відображення даних</title>
-<meta name="theme-color" content="#333333">
-
+<title>Форма введення та аналізу даних</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 10px;
-    font-size: 1.2rem;
-    line-height: 1.6;
-    padding-bottom: 110px;
-}
+    body {
+        font-family: 'Arial', sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #2c3e1d 0%, #1a2a0c 100%);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+        padding-bottom: 120px;
+    }
 
-h1, h2 {
-    font-size: 1.5rem;
-    text-align: center;
-}
+    .calculator {
+        background: linear-gradient(to bottom, #3a4d2a 0%, #2c3e1d 100%);
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        width: 100%;
+        max-width: 480px;
+        box-sizing: border-box;
+        border: 2px solid #5a6b3a;
+        margin-top: 20px;
+    }
 
-.input-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-}
+    .calculator input[type="text"],
+    .calculator select {
+        width: 100%;
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 2px solid #5a6b3a;
+        border-radius: 8px;
+        font-size: 18px;
+        box-sizing: border-box;
+        background-color: #2c3e1d;
+        color: #e0d8b0;
+        font-weight: bold;
+    }
 
-label {
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-}
+    .calculator input[type="text"]::placeholder {
+        color: #8a9470;
+        font-weight: normal;
+    }
 
-input, select {
-    font-size: 1.2rem;
-    padding: 12px;
-    margin-bottom: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 100%;
-}
+    .calculator p, .calculator label {
+        font-size: 18px;
+        margin-bottom: 6px;
+        color: #e0d8b0;
+        font-weight: bold;
+    }
 
-/* 🔹 Сірий інформаційний текст */
-input::placeholder {
-    color: #9a9a9a;
-}
+    #results {
+        font-size: 16px;
+        color: #ffcc00;
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #1a2a0c;
+        border: 2px solid #5a6b3a;
+        border-radius: 8px;
+        word-break: break-word;
+        white-space: pre-wrap;
+        min-height: 100px;
+        font-family: 'Courier New', monospace;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
 
-#results {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    white-space: pre-wrap;
-    font-size: 1.4rem;
-}
+    /* 🔘 Фіксована панель кнопок в один ряд */
+    .bottom-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, #2c3e1d 0%, #1a2a0c 100%);
+        border-top: 3px solid #8b4513;
+        display: flex;
+        flex-direction: row;
+        gap: 10px;
+        padding: 15px;
+        z-index: 100;
+        box-shadow: 0 -5px 15px rgba(0,0,0,0.6);
+    }
 
-/* 🔘 Фіксована панель */
-.bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #f0f0f0;
-    border-top: 1px solid #999;
-    display: flex;
-    gap: 8px;
-    padding: 10px;
-    z-index: 10;
-}
+    .bottom-bar button {
+        flex: 1;
+        padding: 16px 8px;
+        font-size: 18px;
+        font-weight: bold;
+        border: 2px solid #8b4513;
+        border-radius: 8px;
+        cursor: pointer;
+        background: linear-gradient(to bottom, #5a6b3a 0%, #3a4d2a 100%);
+        color: #ffcc00;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        min-width: 0;
+    }
 
-.bottom-bar button {
-    flex: 1;
-    font-size: 1.1rem;
-    padding: 14px;
-    background:#4CAF50;
-    color:white;
-    border:none;
-}
+    .bottom-bar button:hover {
+        background: linear-gradient(to bottom, #6a7b4a 0%, #4a5d3a 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    .bottom-bar button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .bottom-bar button.menu-btn {
+        background: linear-gradient(to bottom, #8b4513 0%, #6b3513 100%);
+        border-color: #a0522d;
+        flex: 0.8;
+    }
+
+    .bottom-bar button.menu-btn:hover {
+        background: linear-gradient(to bottom, #9b5513 0%, #7b4513 100%);
+    }
+
+    /* НОВА СТРУКТУРА: лейбл зліва, поле справа */
+    .form-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: rgba(28, 40, 18, 0.7);
+        border-radius: 10px;
+        border: 1px solid #5a6b3a;
+    }
+
+    .form-row label {
+        flex: 1;
+        margin-bottom: 0;
+        margin-right: 15px;
+        color: #ffcc00;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        white-space: nowrap;
+    }
+
+    .form-row input,
+    .form-row select {
+        flex: 2;
+        margin-bottom: 0;
+        min-width: 0;
+    }
+
+    .crew-member-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+        align-items: center;
+        padding: 10px;
+        background-color: rgba(28, 40, 18, 0.5);
+        border-radius: 8px;
+        border: 1px solid #5a6b3a;
+    }
+
+    .crew-member-row input {
+        flex: 3;
+        background-color: #2c3e1d;
+        border-color: #8b4513;
+        color: #e0d8b0;
+        margin-bottom: 0;
+    }
+
+    .crew-member-row select {
+        flex: 1;
+        min-width: 80px;
+        background-color: #2c3e1d;
+        border-color: #8b4513;
+        color: #ffcc00;
+        font-weight: bold;
+        margin-bottom: 0;
+    }
+
+    h2 {
+        color: #ffcc00;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        margin-bottom: 15px;
+        border-bottom: 2px solid #8b4513;
+        padding-bottom: 8px;
+        font-size: 22px;
+        margin-top: 25px;
+    }
+
+    h2:first-of-type {
+        margin-top: 0;
+    }
+
+    select option {
+        background-color: #2c3e1d;
+        color: #ffcc00;
+        padding: 10px;
+    }
+
+    /* Камуфляжний паттерн для заголовка */
+    .calculator::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+        background: repeating-linear-gradient(
+            45deg,
+            #8b4513,
+            #8b4513 10px,
+            #5a6b3a 10px,
+            #5a6b3a 20px
+        );
+        border-radius: 12px 12px 0 0;
+    }
+
+    /* Стиль для активного поля */
+    input:focus, select:focus {
+        outline: none;
+        border-color: #ffcc00;
+        box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.2);
+    }
+
+    /* Адаптивність для малих екранів */
+    @media (max-width: 480px) {
+        .bottom-bar button {
+            font-size: 16px;
+            padding: 14px 6px;
+            letter-spacing: 0.5px;
+        }
+        
+        .bottom-bar button.menu-btn {
+            flex: 0.7;
+        }
+        
+        .form-row {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .form-row label {
+            margin-right: 0;
+            margin-bottom: 8px;
+            width: 100%;
+        }
+        
+        .form-row input,
+        .form-row select {
+            width: 100%;
+        }
+        
+        .crew-member-row {
+            flex-direction: column;
+        }
+        
+        .crew-member-row input,
+        .crew-member-row select {
+            width: 100%;
+        }
+    }
 </style>
 </head>
 
 <body>
 
-<h1>Форма введення та аналізу даних</h1>
+<div class="calculator">
+    <!-- Екіпаж: лейбл зліва, поле справа -->
+    <div class="form-row">
+        <label>🪖 Екіпаж:</label>
+        <input type="text" id="crew-input" oninput="saveCrewText()" placeholder="Введіть назву екіпажу">
+    </div>
 
-<div class="input-group">
-    <label>Екіпаж:</label>
-    <input type="text" id="crew-input" oninput="saveCrewText()">
-    <label>
-        <input type="checkbox" id="shift-complete">
-        Завершив чергування
-    </label>
+    <!-- Виїзд на позицію: лейбл зліва, поле справа -->
+    <div class="form-row">
+        <label>📍 Виїзд на позицію:</label>
+        <select id="ovp-select" onchange="saveOvpSelection()">
+            <option value=""></option>
+            <option>ОВП</option>
+            <option>ЗВП-1</option>
+            <option>ЗВП-2</option>
+            <option>ЗВП-3</option>
+            <option>ЗВП-4</option>
+            <option>ЗВП-5</option>
+            <option>ЗВП-6</option>
+            <option>Сосновий Бір</option>
+        </select>
+    </div>
+
+    <h2>👥 Дані членів екіпажу</h2>
+
+    <div class="crew-member-row">
+        <input id="text1-input" 
+               placeholder="Прізвище та ініціали" 
+               oninput="saveTextFields()">
+        <select class="selection" onchange="saveSelections()">
+            <option>БЧ</option>
+            <option>ППД</option>
+        </select>
+    </div>
+
+    <div class="crew-member-row">
+        <input id="text2-input" 
+               placeholder="Прізвище та ініціали" 
+               oninput="saveTextFields()">
+        <select class="selection" onchange="saveSelections()">
+            <option>БЧ</option>
+            <option>ППД</option>
+        </select>
+    </div>
+
+    <div class="crew-member-row">
+        <input id="text3-input" 
+               placeholder="Прізвище та ініціали" 
+               oninput="saveTextFields()">
+        <select class="selection" onchange="saveSelections()">
+            <option>БЧ</option>
+            <option>ППД</option>
+        </select>
+    </div>
+
+    <div class="crew-member-row">
+        <input id="text4-input" 
+               placeholder="Прізвище та ініціали" 
+               oninput="saveTextFields()">
+        <select class="selection" onchange="saveSelections()">
+            <option>БЧ</option>
+            <option>ППД</option>
+        </select>
+    </div>
+
+    <div id="results"></div>
 </div>
 
-<div class="input-group">
-    <label>Виїзд на позицію:</label>
-    <select id="ovp-select" onchange="saveOvpSelection()">
-        <option value=""></option>
-        <option>ОВП</option>
-        <option>ЗВП-1</option>
-        <option>ЗВП-2</option>
-        <option>ЗВП-3</option>
-        <option>ЗВП-4</option>
-        <option>ЗВП-5</option>
-        <option>ЗВП-6</option>
-        <option>Сосновий Бір</option>
-    </select>
-</div>
-
-<h2>Дані</h2>
-
-<div class="input-group">
-    <input id="text1-input"
-           placeholder="Прізвище та ініціали члена екіпажу"
-           oninput="saveTextFields()">
-    <select class="selection" onchange="saveSelections()">
-        <option>БЧ</option>
-        <option>ППД</option>
-    </select>
-</div>
-
-<div class="input-group">
-    <input id="text2-input"
-           placeholder="Прізвище та ініціали члена екіпажу"
-           oninput="saveTextFields()">
-    <select class="selection" onchange="saveSelections()">
-        <option>БЧ</option>
-        <option>ППД</option>
-    </select>
-</div>
-
-<div class="input-group">
-    <input id="text3-input"
-           placeholder="Прізвище та ініціали члена екіпажу"
-           oninput="saveTextFields()">
-    <select class="selection" onchange="saveSelections()">
-        <option>БЧ</option>
-        <option>ППД</option>
-    </select>
-</div>
-
-<div class="input-group">
-    <input id="text4-input"
-           placeholder="Прізвище та ініціали члена екіпажу"
-           oninput="saveTextFields()">
-    <select class="selection" onchange="saveSelections()">
-        <option>БЧ</option>
-        <option>ППД</option>
-    </select>
-</div>
-
-<div id="results"></div>
-
-<!-- 🔘 КНОПКИ -->
+<!-- 🔘 Фіксована панель кнопок в один ряд -->
 <div class="bottom-bar">
-    <button onclick="processResults()">Обробити</button>
-    <button onclick="shareResults()">Передати</button>
-    <button onclick="goMenu()">Меню</button>
+    <button onclick="processResults()">🎯 Обробити</button>
+    <button onclick="shareResults()">📤 Передати</button>
+    <button onclick="goMenu()" class="menu-btn">🏠 Меню</button>
 </div>
 
 <script>
@@ -212,7 +397,6 @@ function saveSelections(){
 function processResults(){
     const crew = el("crew-input").value || "";
     const ovp  = el("ovp-select").value || "";
-    const done = el("shift-complete").checked;
 
     const texts = [
         el("text1-input").value,
@@ -222,35 +406,31 @@ function processResults(){
     ];
     const sels = [...document.querySelectorAll(".selection")].map(s=>s.value);
 
-    let out="";
+    let out = "";
+    let bc=[], ppd=[];
+    
+    texts.forEach((t,i)=>{
+        if(!t.trim()) return;
+        (sels[i]==="БЧ" ? bc : ppd).push(t.trim());
+    });
 
-    if(done){
-        out = `${crew} завершив чергування`;
-    } else {
-        let bc=[], ppd=[];
-        texts.forEach((t,i)=>{
-            if(!t.trim()) return;
-            (sels[i]==="БЧ" ? bc : ppd).push(t.trim());
-        });
-
-        out = `${crew} (${ovp})\n`;
-        if(bc.length) out += "На БЧ:\n" + bc.join("\n") + "\n";
-        if(ppd.length) out += "На ППД:\n" + ppd.join("\n") + "\n";
-        out += "4.5.0";
-    }
+    out = `🪖 ${crew} (${ovp})\n`;
+    if(bc.length) out += "🎯 На БЧ:\n" + bc.join("\n") + "\n";
+    if(ppd.length) out += "🏠 На ППД:\n" + ppd.join("\n") + "\n";
+    out += "📍 4.5.0";
 
     el("results").innerHTML = `<pre>${out}</pre>`;
 }
 
 async function shareResults(){
     const text = el("results").innerText;
-    if(!text) return alert("Немає результату");
+    if(!text) return alert("⚠️ Немає результату");
 
     if(navigator.share){
         navigator.share({ text });
     } else {
         navigator.clipboard.writeText(text);
-        alert("Скопійовано");
+        alert("📋 Скопійовано в буфер обміну");
     }
 }
 
