@@ -404,13 +404,13 @@ button.secondary:active {
 <div class="modal" id="settingsModal">
     <div class="modal-content">
         <b>Командиру</b>
-        <textarea id="cmdInput" placeholder="Введіть дані командира"></textarea>
+        <textarea id="cmdInput" placeholder="📄 Введіть дані командира"></textarea>
         
         <b>Посада</b>
-        <textarea id="posInput" placeholder="Введіть вашу посаду"></textarea>
+        <textarea id="posInput" placeholder="📄 Введіть вашу посаду"></textarea>
         
         <b>ПІБ</b>
-        <textarea id="nameInput" placeholder="Введіть ваше ПІБ"></textarea>
+        <textarea id="nameInput" placeholder="📄 Введіть ваше ПІБ"></textarea>
         
         <div class="button-row">
             <button onclick="saveSettings()">💾 Зберегти</button>
@@ -485,15 +485,15 @@ function changeReportType() {
     
     if (reportType === 'simple') {
         // Простий рапорт
-        label1.innerText = 'Введіть текст рапорта:';
-        label2.innerText = 'Необов\'язкове поле для заповнення:';
+        label1.innerText = '📄 Введіть текст рапорта:';
+        label2.innerText = '📄 Необов\'язкове поле для заповнення:';
         if (reportStartElement) {
             reportStartElement.style.display = 'none';
         }
     } else {
         // Рапорт по застосуванню
-        label1.innerText = 'Вставте смс по застосуванню:';
-        label2.innerText = 'Вставте смс хто на БЧ:';
+        label1.innerText = '📄 Вставте смс по застосуванню:';
+        label2.innerText = '📄 Вставте смс хто на БЧ:';
         if (reportStartElement) {
             reportStartElement.style.display = 'block';
         }
@@ -790,6 +790,7 @@ window.addEventListener('load', () => {
 </body>
 
 </html>
+
 
 
 
