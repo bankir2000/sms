@@ -415,9 +415,9 @@ function processResults(){
     });
 
     out = `🪖 ${crew} (${ovp})\n`;
-    if(bc.length) out += "🎯 На БЧ:\n      " + bc.join("  \n      ") + "  \n";
-    if(ppd.length) out += "🏠 На ППД:\n      " + ppd.join("  \n      ") + "  \n";
-    out += "📍 4.5.0";
+    if(bc.length) out += "На БЧ:\n      " + bc.join("  \n      ") + "  \n";
+    if(ppd.length) out += "На ППД:\n      " + ppd.join("  \n      ") + "  \n";
+    out += "4.5.0";
 
     el("results").innerHTML = `<pre>${out}</pre>`;
 }
