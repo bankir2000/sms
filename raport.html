@@ -44,6 +44,7 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     max-width: 600px;
     margin: 0 auto;
+    padding-bottom: 80px; /* Додано відступ для фіксованих кнопок */
 }
 
 .controls b {
@@ -51,6 +52,32 @@ body {
     margin: 12px 0 6px;
     font-size: 16px;
     color: #e0e0e0;
+}
+
+.report-type {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.report-type label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.1);
+    transition: all 0.2s;
+}
+
+.report-type input[type="radio"] {
+    margin: 0;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color);
 }
 
 textarea {
@@ -86,12 +113,17 @@ textarea:focus {
     display: block;
 }
 
-.button-row {
+.fixed-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-medium);
+    padding: 12px;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
     gap: 10px;
-    margin-top: 15px;
+    z-index: 1500;
+    box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
 }
 
 button {
@@ -113,6 +145,14 @@ button {
 button:active {
     transform: scale(0.98);
     background: #388e3c;
+}
+
+button.secondary {
+    background: #2196f3;
+}
+
+button.secondary:active {
+    background: #1976d2;
 }
 
 .settings-btn {
@@ -234,7 +274,7 @@ button:active {
     white-space: pre-line;
 }
 
-/* Дата - ПЕРЕНЕСЕНА НА ЛІВИЙ БІК */
+/* Дата - ПЕРЕНЕСЕНА НА ЛИВИЙ БІК */
 .date-block {
     position: absolute;
     bottom: 100px;
@@ -276,6 +316,16 @@ button:active {
     height: 70px;
 }
 
+.modal-content .button-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-content .button-row button {
+    flex: 1;
+}
+
 /* Індикатор завантаження */
 .loading {
     display: none;
@@ -297,21 +347,34 @@ button:active {
 
 <div class="controls">
     <button class="settings-btn" onclick="openSettingsModal()">Налаштування рапорту</button>
-    
-    <b>Вставте смс по застосуванню:</b>
+    <b>Дата рапорту:</b>
+    <input type="date" id="reportDate" style="width:100%;margin-bottom:15px;padding:10px;font-size:16px;border-radius:8px;border:2px solid var(--primary-color);background:#1e1e1e;color:#fff;">
+
+    <div class="report-type">
+        <label>
+            <input type="radio" name="reportType" value="application" checked onchange="changeReportType()">
+            Рапорт по застосуванню
+        </label>
+        <label>
+            <input type="radio" name="reportType" value="simple" onchange="changeReportType()">
+            Простий рапорт
+        </label>
+    </div>
+
+    <b id="label1">Вставте смс по застосуванню:</b>
     <textarea id="text1" placeholder="Введіть текст..."></textarea>
-    
-    <b>Вставте смс хто на БЧ:</b>
+
+    <b id="label2">Вставте смс хто на БЧ:</b>
     <textarea id="text2" placeholder="Введіть текст..."></textarea>
-    
+
     <b>Підпис пальцем або стилусом:</b>
     <canvas id="signature-pad"></canvas>
-    
-    <div class="button-row">
-        <button onclick="clearPad()">Очистити підпис</button>
-        <button onclick="applySignature()">Застосувати підпис</button>
-        <button onclick="shareRaport()">Поширити</button>
-    </div>
+</div>
+
+<div class="fixed-buttons">
+    <button onclick="clearPad()">Очистити підпис</button>
+    <button onclick="applySignature()">Застосувати підпис</button>
+    <button onclick="shareRaport()">Поширити</button>
 </div>
 
 <!-- Прихована сторінка рапорту для збереження -->
@@ -349,9 +412,9 @@ button:active {
         <b>ПІБ</b>
         <textarea id="nameInput" placeholder="Введіть ваше ПІБ"></textarea>
         
-        <div class="button-row" style="margin-top: 20px;">
+        <div class="button-row">
             <button onclick="saveSettings()">Зберегти</button>
-            <button onclick="closeSettingsModal()">Закрити</button>
+            <button class="secondary" onclick="closeSettingsModal()">Закрити</button>
         </div>
     </div>
 </div>
@@ -359,6 +422,27 @@ button:active {
 <div class="loading" id="loading">Генерується рапорт А4...</div>
 
 <script>
+// Вибір дати
+const dateInput = document.getElementById('reportDate');
+const dateElement = document.getElementById('date');
+
+function setTodayDate() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    dateInput.value = `${yyyy}-${mm}-${dd}`;
+    updateDateFromInput();
+}
+
+function updateDateFromInput() {
+    const [year, month, day] = dateInput.value.split('-');
+    dateElement.innerText = `${day}.${month}.${year} р.`;
+}
+
+dateInput.addEventListener('change', updateDateFromInput);
+setTodayDate();
+
 // Мобільна оптимізація
 (function() {
     let lastTouchEnd = 0;
@@ -377,6 +461,13 @@ const text2 = document.getElementById('text2');
 const block1 = document.getElementById('block1');
 const block2 = document.getElementById('block2');
 
+// ДОДАНО: Змінні для міток
+const label1 = document.getElementById('label1');
+const label2 = document.getElementById('label2');
+
+// ДОДАНО: Глобальна змінна для типу рапорту
+let currentReportType = 'application';
+
 text1.addEventListener('input', () => {
     block1.innerText = text1.value;
 });
@@ -385,16 +476,29 @@ text2.addEventListener('input', () => {
     block2.innerText = text2.value;
 });
 
-// Дата в правильному форматі з "р."
-const dateElement = document.getElementById('date');
-function updateDate() {
-    const now = new Date();
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    dateElement.innerText = `${day}.${month}.${year} р.`;
+// ДОДАНО: Функція зміни типу рапорту
+function changeReportType() {
+    const reportType = document.querySelector('input[name="reportType"]:checked').value;
+    const reportStartElement = document.querySelector('.report-text-start');
+    
+    currentReportType = reportType; // Зберігаємо поточний тип
+    
+    if (reportType === 'simple') {
+        // Простий рапорт
+        label1.innerText = 'Введіть текст рапорта:';
+        label2.innerText = 'Необов\'язкове поле для заповнення:';
+        if (reportStartElement) {
+            reportStartElement.style.display = 'none';
+        }
+    } else {
+        // Рапорт по застосуванню
+        label1.innerText = 'Вставте смс по застосуванню:';
+        label2.innerText = 'Вставте смс хто на БЧ:';
+        if (reportStartElement) {
+            reportStartElement.style.display = 'block';
+        }
+    }
 }
-updateDate();
 
 // Підпис
 const canvas = document.getElementById('signature-pad');
@@ -506,7 +610,16 @@ async function shareRaport() {
         loading.style.display = 'block';
         
         const raportPage = document.getElementById('raportPage');
-        
+        // Оновлюємо стан елемента "Дійсним доповідаю, що:" перед генерацією
+        const reportStartElement = raportPage.querySelector('.report-text-start');
+        if (reportStartElement) {
+            if (currentReportType === 'simple') {
+                reportStartElement.style.display = 'none';
+            } else {
+                reportStartElement.style.display = 'block';
+            }
+        }
+            
         // Тимчасово показуємо рапорт
         const originalPosition = raportPage.style.position;
         const originalLeft = raportPage.style.left;
@@ -668,6 +781,9 @@ window.addEventListener('load', () => {
     if (savedSignature) {
         document.getElementById('signImg').src = savedSignature;
     }
+    
+    // Ініціалізація типу рапорту
+    changeReportType();
 });
 </script>
 
