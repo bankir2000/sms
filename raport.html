@@ -347,7 +347,7 @@ button.secondary:active {
 
 <div class="controls">
     <button class="settings-btn" onclick="openSettingsModal()">Налаштування рапорту</button>
-    <b>Дата рапорту:</b>
+    <b>📅 Дата рапорту:</b>
     <input type="date" id="reportDate" style="width:100%;margin-bottom:15px;padding:10px;font-size:16px;border-radius:8px;border:2px solid var(--primary-color);background:#1e1e1e;color:#fff;">
 
     <div class="report-type">
@@ -367,13 +367,13 @@ button.secondary:active {
     <b id="label2">Вставте смс хто на БЧ:</b>
     <textarea id="text2" placeholder="Введіть текст..."></textarea>
 
-    <b>Підпис пальцем або стилусом:</b>
+    <b>🖊️ Підпис пальцем або стилусом:</b>
     <canvas id="signature-pad"></canvas>
 </div>
 
 <div class="fixed-buttons">
-    <button onclick="clearPad()">Очистити підпис</button>
-    <button onclick="applySignature()">Застосувати підпис</button>
+    <button onclick="clearPad()">🗑️ Очистити підпис</button>
+    <button onclick="applySignature()">📝 Застосувати підпис</button>
     <button onclick="shareRaport()">📤 Поширити</button>
 </div>
 
@@ -413,7 +413,7 @@ button.secondary:active {
         <textarea id="nameInput" placeholder="Введіть ваше ПІБ"></textarea>
         
         <div class="button-row">
-            <button onclick="saveSettings()">Зберегти</button>
+            <button onclick="saveSettings()">💾 Зберегти</button>
             <button class="secondary" onclick="closeSettingsModal()">Закрити</button>
         </div>
     </div>
@@ -790,4 +790,5 @@ window.addEventListener('load', () => {
 </body>
 
 </html>
+
 
