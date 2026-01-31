@@ -123,6 +123,28 @@ body.tablet table {
   margin-bottom: 10px;
   border: 1px solid #ddd;
 }
+
+.patrol-period-container {
+  display: flex;
+  align-items: center;
+  margin: 6px 0;
+}
+
+.patrol-period-container label {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.patrol-period-container input {
+  flex: 1;
+}
+
+.info-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: -4px;
+  margin-bottom: 10px;
+}
 </style>
 </head>
 
@@ -165,6 +187,14 @@ body.tablet table {
   <option value="18">18:00</option>
 </select>
 
+<div class="patrol-period-container">
+  <label>Періодичність дозорів</label>
+  <input id="patrolPeriod" type="text" placeholder="1/4 або 3,6,11">
+</div>
+<div class="info-text">
+  Формат: "1/4" - кожні 4 дні, або "3,6,11" - числа місяця через кому
+</div>
+
 <hr>
 
 <label>Член екіпажу 1</label>
@@ -196,15 +226,11 @@ body.tablet table {
 const SCHEDULE_TYPES = {
   '48/24': {
     SHIFT_ON: 48,
-    SHIFT_OFF: 24,
-    PATROL_CYCLE: 120,  // цикл патруля
-    PATROL_DURATION: 24 // тривалість патруля
+    SHIFT_OFF: 24
   },
   '24/12': {
     SHIFT_ON: 24,
-    SHIFT_OFF: 12,
-    PATROL_CYCLE: 120,   // залишаємо той самий цикл патруля
-    PATROL_DURATION: 24 // залишаємо ту саму тривалість патруля
+    SHIFT_OFF: 12
   }
 };
 
@@ -217,12 +243,12 @@ const STEP = 12; // крок відображення
     const o=document.createElement('option');
     o.value=`${i}-${y}`;
     o.text=String(i+1).padStart(2,'0')+'-'+y;
-    calcMonth.appendChild(o);
+    document.getElementById('calcMonth').appendChild(o);
   }
 })();
 
 /* Збереження даних */
-const fields=['scheduleType','startTime','calcMonth','patrolDate','patrolTime','n1','d1','n2','d2','n3','d3'];
+const fields=['scheduleType','startTime','calcMonth','patrolDate','patrolTime','patrolPeriod','n1','d1','n2','d2','n3','d3'];
 fields.forEach(id=>{
   const el=document.getElementById(id);
   if(localStorage[id]) el.value=localStorage[id];
@@ -236,55 +262,155 @@ fields.forEach(id=>{
 
 /* Оновлення заголовка */
 function updateScheduleTitle() {
-  const type = scheduleType.value;
-  scheduleTitle.textContent = `Графік чергування екіпажу (${type})`;
+  const type = document.getElementById('scheduleType').value;
+  document.getElementById('scheduleTitle').textContent = `Графік чергування екіпажу (${type})`;
 }
 
 /* Ініціалізація заголовка */
 updateScheduleTitle();
 
-function showError(m){ errorBox.textContent=m }
-function clearError(){ errorBox.textContent='' }
+function showError(m){ 
+  document.getElementById('errorBox').textContent=m;
+  console.error(m); // Додаємо вивід помилок в консоль для дебагу
+}
+function clearError(){ document.getElementById('errorBox').textContent='' }
 
 function build(){
+  console.log('Функція build викликана'); // Для дебагу
+  
   clearError();
-  if(!startTime.value||!calcMonth.value||!patrolDate.value||!patrolTime.value)
+  
+  // Отримуємо значення полів
+  const startTime = document.getElementById('startTime').value;
+  const calcMonth = document.getElementById('calcMonth').value;
+  const patrolDate = document.getElementById('patrolDate').value;
+  const patrolTime = document.getElementById('patrolTime').value;
+  const patrolPeriod = document.getElementById('patrolPeriod').value;
+  
+  console.log('Перевірка полів:', {startTime, calcMonth, patrolDate, patrolTime, patrolPeriod}); // Для дебагу
+  
+  if(!startTime||!calcMonth||!patrolDate||!patrolTime||!patrolPeriod) {
+    console.log('Не всі поля заповнені'); // Для дебагу
     return showError('❗ Заповніть всі обовʼязкові поля');
+  }
 
-  const scheduleTypeValue = scheduleType.value;
+  const scheduleTypeValue = document.getElementById('scheduleType').value;
   const schedule = SCHEDULE_TYPES[scheduleTypeValue];
   const SHIFT_ON = schedule.SHIFT_ON;
   const SHIFT_OFF = schedule.SHIFT_OFF;
-  const PATROL_CYCLE = schedule.PATROL_CYCLE;
-  const PATROL_DURATION = schedule.PATROL_DURATION;
   
   const CYCLE_LENGTH = SHIFT_ON + SHIFT_OFF; // загальна довжина циклу
 
-  const [month,year]=calcMonth.value.split('-').map(Number);
+  const [month,year]=calcMonth.split('-').map(Number);
   const crew=[
-    {n:n1.value,d:new Date(d1.value),h:0},
-    {n:n2.value,d:new Date(d2.value),h:0},
-    {n:n3.value,d:new Date(d3.value),h:0}
+    {n:document.getElementById('n1').value, d:new Date(document.getElementById('d1').value), h:0},
+    {n:document.getElementById('n2').value, d:new Date(document.getElementById('d2').value), h:0},
+    {n:document.getElementById('n3').value, d:new Date(document.getElementById('d3').value), h:0}
   ];
-  crew.forEach(c=>c.d.setHours(startTime.value,0,0,0));
+  
+  // Перевірка дат екіпажу
+  if (!crew[0].d.getTime() || !crew[1].d.getTime() || !crew[2].d.getTime()) {
+    return showError('❗ Введіть коректні дати початку чергування для всіх членів екіпажу');
+  }
+  
+  crew.forEach(c=>c.d.setHours(startTime,0,0,0));
 
-  const mStart=new Date(year,month,1,startTime.value);
-  const mEnd=new Date(year,month+1,1,startTime.value);
+  const mStart=new Date(year,month,1,startTime);
+  const mEnd=new Date(year,month+1,1,startTime);
 
-  let pStart=new Date(patrolDate.value);
-  pStart.setHours(patrolTime.value,0,0,0);
+  let pStart=new Date(patrolDate);
+  pStart.setHours(patrolTime,0,0,0);
+
+  // Парсинг періодичності дозорів
+  const patrolPeriodValue = patrolPeriod.trim();
+  let isDayList = false;
+  let patrolDays = [];
+  let patrolInterval = 0;
+  
+  console.log('Парсинг періодичності:', patrolPeriodValue); // Для дебагу
+  
+  if (patrolPeriodValue.includes('/')) {
+    // Формат "1/4" - кожні 4 дні
+    const parts = patrolPeriodValue.split('/');
+    if (parts.length !== 2) {
+      return showError('❗ Неправильний формат періодичності. Використовуйте "1/4" або "3,6,11"');
+    }
+    const num = parseInt(parts[0]);
+    const denom = parseInt(parts[1]);
+    if (isNaN(num) || isNaN(denom) || denom <= 0) {
+      return showError('❗ Неправильний формат періодичності. Використовуйте "1/4" або "3,6,11"');
+    }
+    // Інтервал в годинах: кожні denom днів
+    patrolInterval = denom * 24;
+    console.log('Інтервал дозорів (годин):', patrolInterval); // Для дебагу
+  } else if (patrolPeriodValue.includes(',') || !isNaN(parseInt(patrolPeriodValue))) {
+    // Формат "3,6,11" або просто число
+    isDayList = true;
+    const days = patrolPeriodValue.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
+    if (days.length === 0) {
+      return showError('❗ Неправильний формат днів. Введіть числа від 1 до 31 через кому');
+    }
+    patrolDays = days;
+    console.log('Дні дозорів:', patrolDays); // Для дебагу
+  } else {
+    return showError('❗ Неправильний формат періодичності. Використовуйте "1/4" або "3,6,11"');
+  }
 
   let html='<table><tr><th>Період (12 год)</th>';
   crew.forEach(c=>html+=`<th>${c.n}</th>`);
   html+='</tr>';
 
+  // Дні дозорів для формату днів місяця
+  const patrolDates = [];
+  if (isDayList) {
+    // Створюємо дати дозорів для кожного дня в обраному місяці
+    const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+    patrolDays.forEach(day => {
+      if (day <= lastDayOfMonth) {
+        const patrolStart = new Date(year, month, day, pStart.getHours(), 0, 0);
+        patrolDates.push(patrolStart);
+      }
+    });
+    console.log('Дата дозорів для місяця:', patrolDates); // Для дебагу
+  }
+
+  // Розрахунок графіку
   for(let t=new Date(mStart);t<mEnd;t.setHours(t.getHours()+STEP)){
     let to=new Date(t.getTime() + STEP * 3600000);
     html+=`<tr><td>${t.toLocaleString('uk-UA')}<br>—<br>${to.toLocaleString('uk-UA')}</td>`;
 
     // Перевірка чи є патруль в цей період
-    const hoursFromPatrolStart = (t - pStart) / 3600000;
-    const patrol = ((hoursFromPatrolStart % PATROL_CYCLE + PATROL_CYCLE) % PATROL_CYCLE) < PATROL_DURATION;
+    let isPatrol = false;
+    
+    if (isDayList) {
+      // Перевірка за днями місяця
+      for (const patrolStart of patrolDates) {
+        const patrolEnd = new Date(patrolStart.getTime() + 24 * 3600000);
+        // Перевіряємо перетин періоду (t, to) з дозором (patrolStart, patrolEnd)
+        if (t < patrolEnd && to > patrolStart) {
+          isPatrol = true;
+          break;
+        }
+      }
+    } else {
+      // Перевірка за інтервалом (формат "1/4")
+      // Розраховуємо скільки годин пройшло від початку першого дозору
+      const hoursFromPatrolStart = (t - pStart) / 3600000;
+      
+      // Якщо це майбутній дозор або поточний
+      if (hoursFromPatrolStart >= 0) {
+        // Визначаємо номер циклу
+        const cycleNumber = Math.floor(hoursFromPatrolStart / patrolInterval);
+        const startOfCurrentCycle = new Date(pStart.getTime() + cycleNumber * patrolInterval * 3600000);
+        const endOfCurrentCycle = new Date(startOfCurrentCycle.getTime() + 24 * 3600000); // Дозор триває 24 години
+        
+        // Перевіряємо чи поточний період перетинається з дозором
+        if (t < endOfCurrentCycle && to > startOfCurrentCycle) {
+          isPatrol = true;
+        }
+      }
+      // Якщо hoursFromPatrolStart < 0, це означає що t раніше першого дозору, тому isPatrol залишається false
+    }
 
     crew.forEach(c=>{
       // Розрахунок позиції в циклі чергування
@@ -293,7 +419,7 @@ function build(){
       
       if(cyclePosition < SHIFT_ON){
         c.h += STEP;
-        html+=patrol?'<td class="patrol">ДОЗОР</td>':'<td class="on">Чергування</td>';
+        html+=isPatrol?'<td class="patrol">ДОЗОР</td>':'<td class="on">Чергування</td>';
       } else {
         html+='<td class="off">Відпочинок</td>';
       }
@@ -305,14 +431,15 @@ function build(){
   crew.forEach(c=>html+=`<th>${c.h}</th>`);
   html+='</tr></table>';
 
-  tableContainer.innerHTML=html;
+  console.log('Таблиця побудована, кількість рядків:', (mEnd - mStart) / (STEP * 3600000)); // Для дебагу
+  document.getElementById('tableContainer').innerHTML=html;
 }
 
 async function shareTable(){
-  if(!tableContainer.innerHTML) return showError('❗ Спочатку побудуйте графік');
+  if(!document.getElementById('tableContainer').innerHTML) return showError('❗ Спочатку побудуйте графік');
   const file=new File(
     [`<!DOCTYPE html><html><head>${document.head.innerHTML}</head>
-      <body class="${document.body.className}">${tableContainer.innerHTML}</body></html>`],
+      <body class="${document.body.className}">${document.getElementById('tableContainer').innerHTML}</body></html>`],
     'grafik.html',
     {type:'text/html'}
   );
