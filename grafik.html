@@ -2,156 +2,504 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Графік чергування</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<title>Графік чергування - Командування</title>
 
 <style>
+:root {
+  --army-green: #2d5016;
+  --army-dark: #1a2c0d;
+  --army-light: #4a7c2a;
+  --army-tan: #8b7355;
+  --army-khaki: #c4b7a0;
+  --army-gray: #6c757d;
+  --army-red: #8b0000;
+  --army-blue: #1e3a5f;
+  --text-light: #f0f0f0;
+  --text-dark: #1a1a1a;
+}
+
 body {
-  font-family: Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, sans-serif;
   padding: 10px;
   padding-bottom: 90px;
+  background: linear-gradient(135deg, #1a2c0d 0%, #2d5016 100%);
+  color: var(--text-light);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
 }
 
-select, input, button {
-  margin: 6px 0;
-  width: 100%;
-  padding: 8px;
+/* Адаптивні медіа-запити */
+@media (max-width: 400px) {
+  body {
+    font-size: 12px;
+    padding: 8px;
+    padding-bottom: 80px;
+  }
+  
+  .army-btn {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .schedule-type h3 {
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (min-width: 401px) and (max-width: 600px) {
+  body {
+    font-size: 13px;
+  }
+  
+  .army-btn {
+    font-size: 14px;
+  }
+}
+
+@media (min-width: 601px) and (max-width: 1024px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .control-panel {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .control-panel .section-title {
+    grid-column: 1 / -1;
+  }
+  
+  .patrol-period-container {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Підтримка орієнтації */
+@media (orientation: landscape) and (max-height: 500px) {
+  body {
+    padding-bottom: 70px;
+  }
+  
+  #tableContainer {
+    max-height: 55vh;
+  }
+  
+  .bottom-bar {
+    padding: 8px;
+  }
+  
+  .bottom-bar button {
+    padding: 8px;
+    font-size: 14px;
+  }
+}
+
+/* iOS специфічні стилі */
+@supports (-webkit-touch-callout: none) {
+  .army-input, .army-select {
+    font-size: 16px; /* Запобігає масштабуванню iOS */
+  }
+  
+  .bottom-bar {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+}
+
+/* Android специфічні стилі */
+@supports (not (-webkit-touch-callout: none)) {
+  .army-btn:active {
+    transform: translateY(2px) scale(0.98);
+  }
+}
+
+/* 3D Кнопки */
+.army-btn {
+  position: relative;
+  background: linear-gradient(to bottom, var(--army-light) 0%, var(--army-green) 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
   font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  box-shadow: 
+    0 4px 0 var(--army-dark),
+    0 6px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transition: all 0.1s ease;
+  text-align: center;
+  touch-action: manipulation;
+  min-height: 44px; /* Мінімальна висота для сенсорних екранів */
 }
 
-h3 { margin-top: 0; }
+.army-btn:hover {
+  background: linear-gradient(to bottom, var(--army-green) 0%, var(--army-light) 100%);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 0 var(--army-dark),
+    0 8px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.army-btn:active {
+  transform: translateY(2px);
+  box-shadow: 
+    0 2px 0 var(--army-dark),
+    0 3px 4px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Поля введення та вибір */
+.army-input, .army-select {
+  background: rgba(26, 44, 13, 0.8);
+  border: 2px solid var(--army-tan);
+  color: var(--text-light);
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 44px;
+}
+
+.army-input:focus, .army-select:focus {
+  outline: none;
+  border-color: var(--army-light);
+  box-shadow: 0 0 0 3px rgba(74, 124, 42, 0.3);
+}
+
+.army-input::placeholder {
+  color: var(--army-khaki);
+}
+
+/* Легенда */
+.legend {
+  background: rgba(26, 44, 13, 0.8);
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid var(--army-tan);
+  margin: 15px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
 
 .legend span {
-  padding: 4px 8px;
-  margin-right: 6px;
-  border-radius: 4px;
-  display:inline-block;
-  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: bold;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.3);
+  flex: 1;
+  min-width: 120px;
+  text-align: center;
+  white-space: nowrap;
 }
 
-.on { background:#7ec8ff; }
-.off { background:#7dff9a; }
-.patrol { background:#ffb3b3; font-weight:bold; color:#900; }
+.on { background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: white; }
+.off { background: linear-gradient(135deg, #2d5016 0%, #4a7c2a 100%); color: white; }
+.patrol { background: linear-gradient(135deg, #8b0000 0%, #b22222 100%); color: white; font-weight: bold; }
 
+/* Контейнери */
+.schedule-type {
+  background: rgba(26, 44, 13, 0.9);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  border: 2px solid var(--army-tan);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.schedule-type h3 {
+  color: var(--army-khaki);
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-bottom: 2px solid var(--army-tan);
+  padding-bottom: 10px;
+}
+
+/* Панель керування */
+.control-panel {
+  background: rgba(26, 44, 13, 0.85);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 15px 0;
+  border: 1px solid var(--army-tan);
+}
+
+.control-panel label {
+  display: block;
+  margin: 12px 0 6px;
+  color: var(--army-khaki);
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Повідомлення про помилку */
 .error {
-  color:#b00020;
-  font-weight:bold;
-  margin:8px 0;
+  background: linear-gradient(135deg, #8b0000 0%, #b22222 100%);
+  color: white;
+  padding: 12px 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  font-weight: bold;
+  border-left: 4px solid #ff6b6b;
+  box-shadow: 0 3px 8px rgba(139, 0, 0, 0.3);
+}
+
+/* Інформаційний блок */
+.info-box {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  border-left: 4px solid #4a90e2;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+.info-text {
+  font-size: 12px;
+  color: var(--army-khaki);
+  margin-top: -4px;
+  margin-bottom: 10px;
+  font-style: italic;
+}
+
+/* Таблиця з оптимізацією для мобільних */
+#tableContainer {
+  max-height: 65vh;
+  overflow: auto;
+  border: 2px solid var(--army-tan);
+  margin-top: 15px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  -webkit-overflow-scrolling: touch; /* Плавна прокрутка на iOS */
+}
+
+/* Горизонтальна прокрутка для таблиці на малих екранах */
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
 }
 
 table {
   border-collapse: collapse;
   font-size: 14px;
   min-width: 100%;
+  width: 100%;
 }
 
-th, td {
-  border: 1px solid #999;
-  padding: 8px;
-  text-align: center;
+/* Оптимізація для дуже вузьких екранів */
+@media (max-width: 350px) {
+  table {
+    font-size: 11px;
+  }
+  
+  th, td {
+    padding: 3px !important;
+  }
 }
 
 th {
-  background:#f0f0f0;
+  background: linear-gradient(to bottom, var(--army-dark) 0%, var(--army-green) 100%);
+  color: white;
+  border: 1px solid var(--army-tan) !important;
+  padding: 12px 8px;
+  text-align: center;
   position: sticky;
   top: 0;
   z-index: 4;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
-#tableContainer {
-  max-height: 65vh;
-  overflow: auto;
+td {
   border: 1px solid #999;
-  margin-top: 10px;
-}
-
-body.mobile {
-  font-size: 13px;
-}
-
-body.mobile h3 {
-  font-size: 16px;
+  padding: 8px;
   text-align: center;
+  color: var(--text-dark);
 }
 
-body.mobile table {
-  font-size: 12px;
-}
-
-body.mobile th,
-body.mobile td {
-  padding: 4px;
-  min-width: 90px;
-}
-
+/* Покращений фіксований перший стовпець для темної теми */
 body.mobile th:first-child,
 body.mobile td:first-child {
   position: sticky;
   left: 0;
-  background: #f8f8f8;
+  background: linear-gradient(to bottom, var(--army-dark) 0%, var(--army-green) 100%);
+  color: white;
   z-index: 5;
   min-width: 120px;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
-body.tablet table {
-  font-size: 13px;
+body.mobile td:first-child {
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-dark);
 }
 
+/* Нижня панель з безпечною зоною */
 .bottom-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #f0f0f0;
-  border-top: 1px solid #999;
+  background: rgba(26, 44, 13, 0.95);
+  border-top: 3px solid var(--army-tan);
   display: flex;
-  gap: 6px;
-  padding: 8px;
+  gap: 10px;
+  padding: 12px;
   z-index: 10;
+  backdrop-filter: blur(5px);
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0));
 }
 
 .bottom-bar button {
   flex: 1;
-  font-size: 15px;
-  padding: 10px;
+  font-size: 16px;
+  padding: 12px;
+  min-height: 44px;
 }
 
-.schedule-type {
-  background: #f8f8f8;
-  padding: 10px;
-  border-radius: 5px;
-  margin-bottom: 10px;
-  border: 1px solid #ddd;
+/* Адаптивність для мобільних */
+body.mobile .schedule-type,
+body.mobile .control-panel {
+  padding: 15px;
 }
 
-.patrol-period-container {
-  display: flex;
-  align-items: center;
-  margin: 6px 0;
-}
-
-.patrol-period-container label {
-  flex: 1;
-  margin-right: 10px;
-}
-
-.patrol-period-container input {
-  flex: 1;
-}
-.info-box {
-  background: #e8f4fc;
-  border: 1px solid #b3e0ff;
-  border-radius: 6px;
-  padding: 12px 15px;
-  margin: 10px 0;
-  font-size: 14px;
-  color: #0056b3;
-}
-.info-text {
+body.mobile .legend span {
+  min-width: 100px;
   font-size: 12px;
-  color: #666;
-  margin-top: -4px;
-  margin-bottom: 10px;
+  padding: 5px 8px;
+}
+
+body.mobile .army-btn {
+  padding: 10px;
+  font-size: 14px;
+}
+
+body.tablet .army-btn {
+  padding: 11px;
+  font-size: 15px;
+}
+
+/* Компактне відображення дат для мобільних */
+.mobile-date {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .full-date {
+    display: none;
+  }
+  
+  .mobile-date {
+    display: inline;
+  }
+  
+  /* Скорочені заголовки для таблиці */
+  th:not(:first-child) {
+    min-width: 70px;
+    font-size: 11px;
+    padding: 6px 3px;
+  }
+  
+  td:not(:first-child) {
+    min-width: 70px;
+    padding: 6px 3px;
+  }
+}
+
+/* Стиль для заголовків секцій */
+.section-title {
+  color: var(--army-khaki);
+  font-size: 18px;
+  margin: 20px 0 15px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--army-tan);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Стиль для роздільників */
+hr {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--army-tan), transparent);
+  margin: 20px 0;
+}
+
+/* Панель керування екіпажем для планшетів */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .crew-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+  }
+  
+  .crew-panel label {
+    grid-column: 1 / -1;
+  }
+  
+  .crew-member {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+/* Анімації для кращої взаємодії */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.schedule-type, .control-panel, .info-box {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Спеціальні стилі для високих екранів */
+@media (min-height: 800px) {
+  #tableContainer {
+    max-height: 70vh;
+  }
+}
+
+/* Стилі для темного режиму */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-light: #e0e0e0;
+    --text-dark: #2a2a2a;
+  }
+  
+  #tableContainer {
+    background: rgba(40, 40, 40, 0.95);
+  }
+  
+  body.mobile td:first-child {
+    background: rgba(40, 40, 40, 0.95);
+    color: #e0e0e0;
+  }
+  
+  td {
+    color: #e0e0e0;
+    border-color: #666;
+  }
 }
 </style>
 </head>
@@ -159,79 +507,132 @@ body.tablet table {
 <body>
 
 <div class="schedule-type">
-  <h3 id="scheduleTitle">Графік чергування екіпажу (48/24)</h3>
+  <h3 id="scheduleTitle">ГРАФІК ЧЕРГУВАННЯ ЕКІПАЖУ (48/24)</h3>
   <label>Тип графіка</label>
-  <select id="scheduleType">
+  <select id="scheduleType" class="army-select">
     <option value="48/24">48/24 (48 годин чергування, 24 відпочинок)</option>
     <option value="24/12">24/12 (24 години чергування, 12 відпочинок)</option>
   </select>
 </div>
 
 <div class="legend">
-  <span class="on">Чергування</span>
-  <span class="off">Відпочинок</span>
+  <span class="on">ЧЕРГУВАННЯ</span>
+  <span class="off">ВІДПОЧИНОК</span>
   <span class="patrol">ДОЗОР</span>
 </div>
 
 <div id="errorBox" class="error"></div>
 
-<label>Час початку чергування (для всіх)</label>
-<select id="startTime">
-  <option value="">— оберіть —</option>
-  <option value="6">06:00</option>
-  <option value="18">18:00</option>
-</select>
+<div class="control-panel">
+  <div class="section-title">НАЛАШТУВАННЯ ГРАФІКА</div>
+  
+  <label>Час початку чергування (для всіх)</label>
+  <select id="startTime" class="army-select">
+    <option value="">— ОБЕРІТЬ —</option>
+    <option value="6">06:00</option>
+    <option value="18">18:00</option>
+  </select>
 
-<label>Місяць розрахунку</label>
-<select id="calcMonth"></select>
+  <label>Місяць розрахунку</label>
+  <select id="calcMonth" class="army-select"></select>
 
-<label>Дата першого ДОЗОРУ</label>
-<input id="patrolDate" type="date">
+  <label>Дата першого ДОЗОРУ</label>
+  <input id="patrolDate" type="date" class="army-input">
 
-<label>Час початку ДОЗОРУ</label>
-<select id="patrolTime">
-  <option value="">— оберіть —</option>
-  <option value="6">06:00</option>
-  <option value="18">18:00</option>
-</select>
+  <label>Час початку ДОЗОРУ</label>
+  <select id="patrolTime" class="army-select">
+    <option value="">— ОБЕРІТЬ —</option>
+    <option value="6">06:00</option>
+    <option value="18">18:00</option>
+  </select>
 
-<div class="patrol-period-container">
-  <label>Періодичність дозорів</label>
-  <input id="patrolPeriod" type="text" placeholder="1/4 або 3,6,11">
+  <div class="patrol-period-container">
+    <label>Періодичність дозорів</label>
+    <input id="patrolPeriod" type="text" class="army-input" placeholder="1/4 або 3,6,11">
+  </div>
+  <div class="info-text">
+    Формат: "1/4" - кожні 4 дні, або "3,6,11" - числа місяця через кому
+  </div>
 </div>
-<div class="info-text">
-  Формат: "1/4" - кожні 4 дні, або "3,6,11" - числа місяця через кому
-</div>
+
 <div class="info-box">
+  <strong>⚙️ ІНСТРУКЦІЯ:</strong><br>
   Для кожного члена екіпажу введіть ПІБ та дату початку його чергування. 
   Дата початку визначає, коли саме кожен член екіпажу починає свій перший цикл чергування.
 </div>
-  
+
 <hr>
 
-<label>Член екіпажу 1</label>
-<input id="n1"><input id="d1" type="date">
-
-<label>Член екіпажу 2</label>
-<input id="n2"><input id="d2" type="date">
-
-<label>Член екіпажу 3</label>
-<input id="n3"><input id="d3" type="date">
+<div class="control-panel crew-panel">
+  <div class="section-title">СКЛАД ЕКІПАЖУ</div>
+  
+  <div class="crew-member">
+    <label>Член екіпажу 1</label>
+    <input id="n1" class="army-input" placeholder="ПІБ">
+    <input id="d1" type="date" class="army-input" style="margin-top: 5px;">
+  </div>
+  
+  <div class="crew-member">
+    <label>Член екіпажу 2</label>
+    <input id="n2" class="army-input" placeholder="ПІБ">
+    <input id="d2" type="date" class="army-input" style="margin-top: 5px;">
+  </div>
+  
+  <div class="crew-member">
+    <label>Член екіпажу 3</label>
+    <input id="n3" class="army-input" placeholder="ПІБ">
+    <input id="d3" type="date" class="army-input" style="margin-top: 5px;">
+  </div>
+</div>
 
 <div id="tableContainer"></div>
 
 <div class="bottom-bar">
-  <button onclick="build()">Побудувати</button>
-  <button onclick="shareTable()">Поділитися</button>
-  <button onclick="goMenu()">Меню</button>
+  <button onclick="build()" class="army-btn">ПОБУДУВАТИ ГРАФІК</button>
+  <button onclick="shareTable()" class="army-btn">ПОДІЛИТИСЯ</button>
+  <button onclick="goMenu()" class="army-btn">МЕНЮ</button>
 </div>
 
 <script>
-/* 📱 Автовизначення пристрою */
+/* 📱 Покращене автовизначення пристрою */
 (function(){
-  const w = window.innerWidth;
-  if (w <= 600) document.body.classList.add('mobile');
-  else if (w <= 1024) document.body.classList.add('tablet');
+  const detectDevice = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const body = document.body;
+    
+    // Видаляємо старі класи
+    body.classList.remove('mobile', 'tablet');
+    
+    // Додаємо нові класи
+    if (w <= 600) {
+      body.classList.add('mobile');
+      console.log('Mobile detected:', w + 'x' + h);
+    } else if (w <= 1024) {
+      body.classList.add('tablet');
+      console.log('Tablet detected:', w + 'x' + h);
+    }
+    
+    // Перевірка орієнтації
+    if (h > w) {
+      body.classList.add('portrait');
+      body.classList.remove('landscape');
+    } else {
+      body.classList.add('landscape');
+      body.classList.remove('portrait');
+    }
+  };
+  
+  // Детект при завантаженні
+  detectDevice();
+  
+  // Детект при зміні розміру
+  window.addEventListener('resize', detectDevice);
+  
+  // Детект при зміні орієнтації
+  window.addEventListener('orientationchange', () => {
+    setTimeout(detectDevice, 100);
+  });
 })();
 
 /* Константи для різних режимів */
@@ -251,44 +652,116 @@ const STEP = 12; // крок відображення
 /* Місяці */
 (function(){
   const y = new Date().getFullYear();
-  for(let i=0;i<12;i++){
-    const o=document.createElement('option');
-    o.value=`${i}-${y}`;
-    o.text=String(i+1).padStart(2,'0')+'-'+y;
-    document.getElementById('calcMonth').appendChild(o);
+  const select = document.getElementById('calcMonth');
+  // Очищаємо старий список
+  select.innerHTML = '';
+  
+  for(let i = 0; i < 12; i++){
+    const o = document.createElement('option');
+    o.value = `${i}-${y}`;
+    const monthName = new Date(y, i).toLocaleString('uk-UA', { month: 'long' });
+    o.text = `${String(i+1).padStart(2,'0')} (${monthName}) ${y}`;
+    select.appendChild(o);
+    
+    // Автоматично вибираємо поточний місяць
+    if (i === new Date().getMonth()) {
+      o.selected = true;
+    }
   }
+})();
+
+/* Автозаповнення дати патруля */
+(function(){
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const patrolDateInput = document.getElementById('patrolDate');
+  const patrolTimeSelect = document.getElementById('patrolTime');
+  
+  // Встановлюємо завтрашню дату за замовчуванням
+  patrolDateInput.valueAsDate = tomorrow;
+  
+  // Встановлюємо час 06:00 за замовчуванням
+  patrolTimeSelect.value = '6';
+  
+  // Автозбереження
+  localStorage.setItem('patrolDate', patrolDateInput.value);
+  localStorage.setItem('patrolTime', '6');
 })();
 
 /* Збереження даних */
 const fields=['scheduleType','startTime','calcMonth','patrolDate','patrolTime','patrolPeriod','n1','d1','n2','d2','n3','d3'];
 fields.forEach(id=>{
   const el=document.getElementById(id);
-  if(localStorage[id]) el.value=localStorage[id];
-  el.onchange=()=>{
+  if(localStorage[id]) {
+    el.value = localStorage[id];
+  }
+  el.addEventListener('change', ()=>{
     localStorage[id]=el.value;
     if(id === 'scheduleType') {
       updateScheduleTitle();
     }
-  };
+  });
+  
+  // Додаємо клас при фокусі для мобільних
+  el.addEventListener('focus', function() {
+    this.classList.add('focused');
+  });
+  
+  el.addEventListener('blur', function() {
+    this.classList.remove('focused');
+  });
 });
 
 /* Оновлення заголовка */
 function updateScheduleTitle() {
   const type = document.getElementById('scheduleType').value;
-  document.getElementById('scheduleTitle').textContent = `Графік чергування екіпажу (${type})`;
+  const title = document.getElementById('scheduleTitle');
+  title.textContent = `ГРАФІК ЧЕРГУВАННЯ ЕКІПАЖУ (${type})`;
+  title.style.animation = 'none';
+  setTimeout(() => {
+    title.style.animation = 'fadeIn 0.3s ease-out';
+  }, 10);
 }
 
 /* Ініціалізація заголовка */
 updateScheduleTitle();
 
 function showError(m){ 
-  document.getElementById('errorBox').textContent=m;
-  console.error(m); // Додаємо вивід помилок в консоль для дебагу
+  const errorBox = document.getElementById('errorBox');
+  errorBox.textContent = m;
+  errorBox.style.animation = 'none';
+  setTimeout(() => {
+    errorBox.style.animation = 'fadeIn 0.3s ease-out';
+  }, 10);
+  console.error(m);
+  
+  // Вібрування на мобільних
+  if ('vibrate' in navigator && window.innerWidth <= 600) {
+    navigator.vibrate(200);
+  }
 }
-function clearError(){ document.getElementById('errorBox').textContent='' }
+
+function clearError(){ 
+  document.getElementById('errorBox').textContent='';
+}
+
+/* Функція для форматування дат на мобільних */
+function formatDateForMobile(date) {
+  if (window.innerWidth <= 480) {
+    return date.toLocaleString('uk-UA', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+  return date.toLocaleString('uk-UA');
+}
 
 function build(){
-  console.log('Функція build викликана'); // Для дебагу
+  console.log('Функція build викликана');
   
   clearError();
   
@@ -299,11 +772,11 @@ function build(){
   const patrolTime = document.getElementById('patrolTime').value;
   const patrolPeriod = document.getElementById('patrolPeriod').value;
   
-  console.log('Перевірка полів:', {startTime, calcMonth, patrolDate, patrolTime, patrolPeriod}); // Для дебагу
+  console.log('Перевірка полів:', {startTime, calcMonth, patrolDate, patrolTime, patrolPeriod});
   
   if(!startTime||!calcMonth||!patrolDate||!patrolTime||!patrolPeriod) {
-    console.log('Не всі поля заповнені'); // Для дебагу
-    return showError('❗ Заповніть всі обовʼязкові поля');
+    console.log('Не всі поля заповнені');
+    return showError('❗ ЗАПОВНІТЬ ВСІ ОБОВʼЯЗКОВІ ПОЛЯ');
   }
 
   const scheduleTypeValue = document.getElementById('scheduleType').value;
@@ -315,14 +788,14 @@ function build(){
 
   const [month,year]=calcMonth.split('-').map(Number);
   const crew=[
-    {n:document.getElementById('n1').value, d:new Date(document.getElementById('d1').value), h:0},
-    {n:document.getElementById('n2').value, d:new Date(document.getElementById('d2').value), h:0},
-    {n:document.getElementById('n3').value, d:new Date(document.getElementById('d3').value), h:0}
+    {n:document.getElementById('n1').value || 'Член 1', d:new Date(document.getElementById('d1').value), h:0},
+    {n:document.getElementById('n2').value || 'Член 2', d:new Date(document.getElementById('d2').value), h:0},
+    {n:document.getElementById('n3').value || 'Член 3', d:new Date(document.getElementById('d3').value), h:0}
   ];
   
   // Перевірка дат екіпажу
   if (!crew[0].d.getTime() || !crew[1].d.getTime() || !crew[2].d.getTime()) {
-    return showError('❗ Введіть коректні дати початку чергування для всіх членів екіпажу');
+    return showError('❗ ВВЕДІТЬ КОРЕКТНІ ДАТИ ПОЧАТКУ ЧЕРГУВАННЯ ДЛЯ ВСІХ ЧЛЕНІВ ЕКІПАЖУ');
   }
   
   crew.forEach(c=>c.d.setHours(startTime,0,0,0));
@@ -339,36 +812,36 @@ function build(){
   let patrolDays = [];
   let patrolInterval = 0;
   
-  console.log('Парсинг періодичності:', patrolPeriodValue); // Для дебагу
+  console.log('Парсинг періодичності:', patrolPeriodValue);
   
   if (patrolPeriodValue.includes('/')) {
     // Формат "1/4" - кожні 4 дні
     const parts = patrolPeriodValue.split('/');
     if (parts.length !== 2) {
-      return showError('❗ Неправильний формат періодичності. Використовуйте "1/4" або "3,6,11"');
+      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
     }
     const num = parseInt(parts[0]);
     const denom = parseInt(parts[1]);
     if (isNaN(num) || isNaN(denom) || denom <= 0) {
-      return showError('❗ Неправильний формат періодичності. Використовуйте "1/4" або "3,6,11"');
+      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
     }
     // Інтервал в годинах: кожні denom днів
     patrolInterval = denom * 24;
-    console.log('Інтервал дозорів (годин):', patrolInterval); // Для дебагу
+    console.log('Інтервал дозорів (годин):', patrolInterval);
   } else if (patrolPeriodValue.includes(',') || !isNaN(parseInt(patrolPeriodValue))) {
     // Формат "3,6,11" або просто число
     isDayList = true;
     const days = patrolPeriodValue.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
     if (days.length === 0) {
-      return showError('❗ Неправильний формат днів. Введіть числа від 1 до 31 через кому');
+      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДНІВ. ВВЕДІТЬ ЧИСЛА ВІД 1 ДО 31 ЧЕРЕЗ КОМУ');
     }
     patrolDays = days;
-    console.log('Дні дозорів:', patrolDays); // Для дебагу
+    console.log('Дні дозорів:', patrolDays);
   } else {
-    return showError('❗ Неправильний формат періодичності. Використовуйте "1/4" або "3,6,11"');
+    return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
   }
 
-  let html='<table><tr><th>Період (12 год)</th>';
+  let html='<div class="table-wrapper"><table><tr><th>Період (12 год)</th>';
   crew.forEach(c=>html+=`<th>${c.n}</th>`);
   html+='</tr>';
 
@@ -383,13 +856,15 @@ function build(){
         patrolDates.push(patrolStart);
       }
     });
-    console.log('Дата дозорів для місяця:', patrolDates); // Для дебагу
+    console.log('Дата дозорів для місяця:', patrolDates);
   }
 
   // Розрахунок графіку
   for(let t=new Date(mStart);t<mEnd;t.setHours(t.getHours()+STEP)){
     let to=new Date(t.getTime() + STEP * 3600000);
-    html+=`<tr><td>${t.toLocaleString('uk-UA')}<br>—<br>${to.toLocaleString('uk-UA')}</td>`;
+    const dateFrom = formatDateForMobile(t);
+    const dateTo = formatDateForMobile(to);
+    html+=`<tr><td>${dateFrom}<br>—<br>${dateTo}</td>`;
 
     // Перевірка чи є патруль в цей період
     let isPatrol = false;
@@ -421,7 +896,6 @@ function build(){
           isPatrol = true;
         }
       }
-      // Якщо hoursFromPatrolStart < 0, це означає що t раніше першого дозору, тому isPatrol залишається false
     }
 
     crew.forEach(c=>{
@@ -441,28 +915,98 @@ function build(){
 
   html+='<tr><th>Разом годин</th>';
   crew.forEach(c=>html+=`<th>${c.h}</th>`);
-  html+='</tr></table>';
+  html+='</tr></table></div>';
 
-  console.log('Таблиця побудована, кількість рядків:', (mEnd - mStart) / (STEP * 3600000)); // Для дебагу
-  document.getElementById('tableContainer').innerHTML=html;
+  console.log('Таблиця побудована, кількість рядків:', (mEnd - mStart) / (STEP * 3600000));
+  
+  const container = document.getElementById('tableContainer');
+  container.innerHTML = html;
+  container.style.animation = 'none';
+  setTimeout(() => {
+    container.style.animation = 'fadeIn 0.3s ease-out';
+  }, 10);
+  
+  // Плавна прокрутка до таблиці на мобільних
+  if (window.innerWidth <= 600) {
+    setTimeout(() => {
+      container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 300);
+  }
 }
 
 async function shareTable(){
-  if(!document.getElementById('tableContainer').innerHTML) return showError('❗ Спочатку побудуйте графік');
-  const file=new File(
-    [`<!DOCTYPE html><html><head>${document.head.innerHTML}</head>
-      <body class="${document.body.className}">${document.getElementById('tableContainer').innerHTML}</body></html>`],
-    'grafik.html',
-    {type:'text/html'}
-  );
-  if(navigator.canShare&&navigator.canShare({files:[file]}))
-    navigator.share({files:[file]});
-  else alert('Передача не підтримується');
+  if(!document.getElementById('tableContainer').innerHTML) return showError('❗ СПОЧАТКУ ПОБУДУЙТЕ ГРАФІК');
+  
+  try {
+    const file = new File(
+      [`<!DOCTYPE html><html><head>${document.head.innerHTML}</head>
+        <body class="${document.body.className}">${document.getElementById('tableContainer').innerHTML}</body></html>`],
+      `графік_чергування_${new Date().toLocaleDateString('uk-UA')}.html`,
+      {type: 'text/html'}
+    );
+    
+    if (navigator.share && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: 'Графік чергування',
+        text: 'Графік чергування екіпажу'
+      });
+    } else if (navigator.clipboard) {
+      const tableHtml = document.getElementById('tableContainer').innerHTML;
+      await navigator.clipboard.writeText(tableHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim());
+      showError('✓ Таблицю скопійовано в буфер обміну');
+    } else {
+      // Fallback для старих браузерів
+      const blob = new Blob([file], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  } catch (err) {
+    console.error('Помилка спільного доступу:', err);
+    showError('❗ Помилка спільного доступу');
+  }
 }
 
 function goMenu(){
-  window.location.href='./index.html';
+  // Анімація перед переходом
+  document.body.style.opacity = '0.7';
+  document.body.style.transition = 'opacity 0.3s';
+  
+  setTimeout(() => {
+    window.location.href = './index.html';
+  }, 300);
 }
+
+/* Додаткові покращення для мобільних */
+// Запобігаємо збільшенню при фокусі на iOS
+document.addEventListener('touchstart', function() {}, {passive: true});
+
+// Слухач для сенсорних подій на кнопках
+document.querySelectorAll('.army-btn').forEach(button => {
+  button.addEventListener('touchstart', function(e) {
+    this.style.transform = 'translateY(2px) scale(0.98)';
+  }, { passive: true });
+  
+  button.addEventListener('touchend', function() {
+    this.style.transform = '';
+  }, { passive: true });
+});
+
+// Оптимізація для планшетів
+if (window.innerWidth > 600 && window.innerWidth <= 1024) {
+  document.querySelectorAll('.army-input, .army-select').forEach(el => {
+    el.style.fontSize = '15px';
+    el.style.padding = '14px';
+  });
+}
+
+console.log('Сайт адаптований для мобільних пристроїв та планшетів');
 </script>
 
 </body>
