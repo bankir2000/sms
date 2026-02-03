@@ -941,7 +941,7 @@ async function shareTable(){
     const file = new File(
       [`<!DOCTYPE html><html><head>${document.head.innerHTML}</head>
         <body class="${document.body.className}">${document.getElementById('tableContainer').innerHTML}</body></html>`],
-      `графік_чергування_${new Date().toLocaleDateString('uk-UA')}.html`,
+      `графік_${new Date().toLocaleDateString('uk-UA')}.html`,
       {type: 'text/html'}
     );
     
