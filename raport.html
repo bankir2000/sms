@@ -167,8 +167,7 @@ button.secondary:active {
 
 /* Стилі А4 для збереження */
 #raportPage {
-    width: 794px; /* 210mm при 96 DPI */
-    height: 1123px; /* 297mm при 96 DPI */
+    width: 794px;
     background: white;
     color: #000000;
     font-family: 'Times New Roman', Times, serif;
@@ -178,16 +177,22 @@ button.secondary:active {
     left: -9999px;
     top: -9999px;
     z-index: 10000;
-    overflow: hidden;
-    page-break-inside: avoid;
 }
 
 /* Контейнер вмісту А4 */
 .raport-content {
     width: 100%;
-    height: 100%;
-    padding: 80px 40px 80px 113px; /* 25mm 30mm 20mm 30mm при 96 DPI */
+    padding: 80px 40px 80px 113px;
     box-sizing: border-box;
+    background: white;
+}
+
+/* Розділювач сторінок - білий блок висотою А4 */
+.page-break {
+    width: 794px;
+    height: 60px;
+    background: white;
+    display: block;
 }
 
 /* Адресата праворуч */
@@ -203,7 +208,7 @@ button.secondary:active {
 .report-title {
     text-align: center;
     margin-bottom: 45px; /* 11mm */
-    font-size: 16pt;
+    font-size: 14pt;
     font-weight: bold;
     text-transform: uppercase;
 }
@@ -233,7 +238,7 @@ button.secondary:active {
     text-align: left;
     white-space: pre-line;
     line-height: 1.5;
-    margin-bottom: 150px; /* Простір для підпису */
+    margin-bottom: calc(7 * 1.5 * 14pt); /* 7 порожніх рядків */
 }
 
 /* Позиціонування підпису, посади та ПІБ */
@@ -241,16 +246,12 @@ button.secondary:active {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    position: absolute;
-    bottom: 150px;
-    left: 113px;
-    right: 113px;
 }
 
 .position-block {
     text-align: left;
     width: 200px;
-    font-size: 12pt;
+    font-size: 14pt;
     white-space: pre-line;
 }
 
@@ -270,16 +271,15 @@ button.secondary:active {
 .name-block {
     text-align: right;
     width: 200px;
-    font-size: 12pt;
+    font-size: 14pt;
     white-space: pre-line;
 }
 
-/* Дата - ПЕРЕНЕСЕНА НА ЛИВИЙ БІК */
+/* Дата - на новому рядку після підпису зліва */
 .date-block {
-    position: absolute;
-    bottom: 100px;
-    left: 113px; /* Змінено з right на left */
-    font-size: 11pt;
+    text-align: left;
+    font-size: 14pt;
+    margin-top: calc(1.5 * 14pt); /* один рядок відступу */
 }
 
 /* Модальне вікно налаштувань */
@@ -610,7 +610,6 @@ async function shareRaport() {
         loading.style.display = 'block';
         
         const raportPage = document.getElementById('raportPage');
-        // Оновлюємо стан елемента "Дійсним доповідаю, що:" перед генерацією
         const reportStartElement = raportPage.querySelector('.report-text-start');
         if (reportStartElement) {
             if (currentReportType === 'simple') {
@@ -619,7 +618,7 @@ async function shareRaport() {
                 reportStartElement.style.display = 'block';
             }
         }
-            
+        
         // Тимчасово показуємо рапорт
         const originalPosition = raportPage.style.position;
         const originalLeft = raportPage.style.left;
@@ -634,8 +633,27 @@ async function shareRaport() {
         raportPage.style.zIndex = '9999';
         raportPage.style.display = 'block';
         
-        // Очікуємо завантаження зображень
         await waitForImages();
+        
+        // Вимірюємо висоту контенту
+        const contentHeight = raportPage.scrollHeight;
+        const pageHeight = 1123;
+        
+        // Якщо контент більше однієї сторінки, додаємо роздільник
+        let totalHeight = contentHeight;
+        if (contentHeight > pageHeight) {
+            // Додаємо білий розд ільник між сторінками
+            const pageBreak = document.createElement('div');
+            pageBreak.className = 'page-break';
+            
+            // Вставляємо роздільник після першої сторінки
+            const content = raportPage.querySelector('.raport-content');
+            content.style.paddingBottom = '60px'; // Додатковий відступ
+            
+            totalHeight = Math.ceil(contentHeight / pageHeight) * pageHeight + 60;
+        }
+        
+        raportPage.style.height = totalHeight + 'px';
         
         const c = await html2canvas(raportPage, {
             scale: 3,
@@ -643,9 +661,9 @@ async function shareRaport() {
             logging: false,
             backgroundColor: '#ffffff',
             width: 794,
-            height: 1123,
+            height: totalHeight,
             windowWidth: 794,
-            windowHeight: 1123,
+            windowHeight: totalHeight,
             onclone: function(clonedDoc) {
                 const clonedPaper = clonedDoc.getElementById('raportPage');
                 clonedPaper.style.position = 'fixed';
@@ -653,6 +671,7 @@ async function shareRaport() {
                 clonedPaper.style.top = '0';
                 clonedPaper.style.transform = 'none';
                 clonedPaper.style.display = 'block';
+                clonedPaper.style.height = totalHeight + 'px';
             }
         });
         
@@ -663,6 +682,11 @@ async function shareRaport() {
         raportPage.style.transform = '';
         raportPage.style.zIndex = originalZIndex;
         raportPage.style.display = originalDisplay;
+        raportPage.style.height = '';
+        
+        // Видаляємо додатковий padding
+        const content = raportPage.querySelector('.raport-content');
+        if (content) content.style.paddingBottom = '';
         
         // Конвертуємо в Blob
         const blob = await new Promise(resolve => {
