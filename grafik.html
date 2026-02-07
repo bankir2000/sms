@@ -181,6 +181,40 @@ body {
   color: var(--army-khaki);
 }
 
+/* Стилі для чекбокса */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+  padding: 12px;
+  background: rgba(26, 44, 13, 0.6);
+  border-radius: 6px;
+  border: 2px solid var(--army-tan);
+}
+
+.checkbox-container input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  accent-color: var(--army-green);
+}
+
+.checkbox-container label {
+  color: var(--army-khaki);
+  font-weight: bold;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 0;
+}
+
+/* Disabled стилі для полів */
+.army-input:disabled, .army-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(26, 44, 13, 0.4);
+}
+
 /* Легенда */
 .legend {
   background: rgba(26, 44, 13, 0.8);
@@ -518,7 +552,7 @@ hr {
 <div class="legend">
   <span class="on">ЧЕРГУВАННЯ</span>
   <span class="off">ВІДПОЧИНОК</span>
-  <span class="patrol">ДОЗОР</span>
+  <span class="patrol" id="patrolLegend">ДОЗОР</span>
 </div>
 
 <div id="errorBox" class="error"></div>
@@ -536,10 +570,15 @@ hr {
   <label>Місяць розрахунку</label>
   <select id="calcMonth" class="army-select"></select>
 
-  <label>Дата першого ДОЗОРУ</label>
+  <div class="checkbox-container">
+    <input type="checkbox" id="noPatrol" onchange="togglePatrolFields()">
+    <label for="noPatrol">Без дозорів</label>
+  </div>
+
+  <label id="patrolDateLabel">Дата першого ДОЗОРУ</label>
   <input id="patrolDate" type="date" class="army-input">
 
-  <label>Час початку ДОЗОРУ</label>
+  <label id="patrolTimeLabel">Час початку ДОЗОРУ</label>
   <select id="patrolTime" class="army-select">
     <option value="">— ОБЕРІТЬ —</option>
     <option value="6">06:00</option>
@@ -547,10 +586,10 @@ hr {
   </select>
 
   <div class="patrol-period-container">
-    <label>Періодичність дозорів</label>
+    <label id="patrolPeriodLabel">Періодичність дозорів</label>
     <input id="patrolPeriod" type="text" class="army-input" placeholder="1/4 або 3,6,11">
   </div>
-  <div class="info-text">
+  <div class="info-text" id="patrolInfoText">
     Формат: "1/4" - кожні 4 дні, або "3,6,11" - числа місяця через кому
   </div>
 </div>
@@ -670,25 +709,96 @@ const STEP = 12; // крок відображення
   }
 })();
 
-/* Автозаповнення дати патруля */
+/* Автозаповнення дати патруля (тільки якщо немає збережених значень) */
 (function(){
-  const today = new Date();
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
   const patrolDateInput = document.getElementById('patrolDate');
   const patrolTimeSelect = document.getElementById('patrolTime');
   
-  // Встановлюємо завтрашню дату за замовчуванням
-  patrolDateInput.valueAsDate = tomorrow;
+  // Якщо немає збережених значень, встановлюємо за замовчуванням
+  if (!localStorage.getItem('patrolDate')) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Встановлюємо завтрашню дату за замовчуванням
+    patrolDateInput.valueAsDate = tomorrow;
+    localStorage.setItem('patrolDate', patrolDateInput.value);
+  }
   
-  // Встановлюємо час 06:00 за замовчуванням
-  patrolTimeSelect.value = '6';
-  
-  // Автозбереження
-  localStorage.setItem('patrolDate', patrolDateInput.value);
-  localStorage.setItem('patrolTime', '6');
+  if (!localStorage.getItem('patrolTime')) {
+    // Встановлюємо час 06:00 за замовчуванням
+    patrolTimeSelect.value = '6';
+    localStorage.setItem('patrolTime', '6');
+  }
 })();
+
+/* Функція для перемикання полів дозору */
+function togglePatrolFields() {
+  const noPatrol = document.getElementById('noPatrol').checked;
+  const patrolDate = document.getElementById('patrolDate');
+  const patrolTime = document.getElementById('patrolTime');
+  const patrolPeriod = document.getElementById('patrolPeriod');
+  const patrolDateLabel = document.getElementById('patrolDateLabel');
+  const patrolTimeLabel = document.getElementById('patrolTimeLabel');
+  const patrolPeriodLabel = document.getElementById('patrolPeriodLabel');
+  const patrolInfoText = document.getElementById('patrolInfoText');
+  const patrolLegend = document.getElementById('patrolLegend');
+  const patrolPeriodContainer = document.querySelector('.patrol-period-container');
+  
+  if (noPatrol) {
+    // Приховуємо поля дозору
+    patrolDate.style.display = 'none';
+    patrolTime.style.display = 'none';
+    patrolPeriod.style.display = 'none';
+    patrolDateLabel.style.display = 'none';
+    patrolTimeLabel.style.display = 'none';
+    patrolPeriodLabel.style.display = 'none';
+    patrolInfoText.style.display = 'none';
+    
+    // Очищаємо значення
+    patrolDate.value = '';
+    patrolTime.value = '';
+    patrolPeriod.value = '';
+    
+    // Приховуємо легенду дозору
+    patrolLegend.style.display = 'none';
+    
+    // Зберігаємо стан
+    localStorage.setItem('noPatrol', 'true');
+    localStorage.setItem('patrolDate', '');
+    localStorage.setItem('patrolTime', '');
+    localStorage.setItem('patrolPeriod', '');
+  } else {
+    // Показуємо поля дозору
+    patrolDate.style.display = 'block';
+    patrolTime.style.display = 'block';
+    patrolPeriod.style.display = 'block';
+    patrolDateLabel.style.display = 'block';
+    patrolTimeLabel.style.display = 'block';
+    patrolPeriodLabel.style.display = 'block';
+    patrolInfoText.style.display = 'block';
+    
+    // Показуємо легенду дозору
+    patrolLegend.style.display = 'inline';
+    
+    // Зберігаємо стан
+    localStorage.setItem('noPatrol', 'false');
+    
+    // Відновлюємо значення за замовчуванням, якщо вони порожні
+    if (!patrolDate.value) {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      patrolDate.valueAsDate = tomorrow;
+      localStorage.setItem('patrolDate', patrolDate.value);
+    }
+    
+    if (!patrolTime.value) {
+      patrolTime.value = '6';
+      localStorage.setItem('patrolTime', '6');
+    }
+  }
+}
 
 /* Збереження даних */
 const fields=['scheduleType','startTime','calcMonth','patrolDate','patrolTime','patrolPeriod','n1','d1','n2','d2','n3','d3'];
@@ -713,6 +823,26 @@ fields.forEach(id=>{
     this.classList.remove('focused');
   });
 });
+
+/* Відновлення стану чекбокса "Без дозорів" */
+(function(){
+  const noPatrolCheckbox = document.getElementById('noPatrol');
+  const savedNoPatrol = localStorage.getItem('noPatrol');
+  
+  if (savedNoPatrol === 'true') {
+    noPatrolCheckbox.checked = true;
+    togglePatrolFields();
+  } else {
+    noPatrolCheckbox.checked = false;
+    // Показуємо легенду дозору
+    document.getElementById('patrolLegend').style.display = 'inline';
+  }
+  
+  // Додаємо слухач для збереження стану
+  noPatrolCheckbox.addEventListener('change', function() {
+    localStorage.setItem('noPatrol', this.checked);
+  });
+})();
 
 /* Оновлення заголовка */
 function updateScheduleTitle() {
@@ -768,15 +898,23 @@ function build(){
   // Отримуємо значення полів
   const startTime = document.getElementById('startTime').value;
   const calcMonth = document.getElementById('calcMonth').value;
+  const noPatrol = document.getElementById('noPatrol').checked;
   const patrolDate = document.getElementById('patrolDate').value;
   const patrolTime = document.getElementById('patrolTime').value;
   const patrolPeriod = document.getElementById('patrolPeriod').value;
   
-  console.log('Перевірка полів:', {startTime, calcMonth, patrolDate, patrolTime, patrolPeriod});
+  console.log('Перевірка полів:', {startTime, calcMonth, noPatrol, patrolDate, patrolTime, patrolPeriod});
   
-  if(!startTime||!calcMonth||!patrolDate||!patrolTime||!patrolPeriod) {
-    console.log('Не всі поля заповнені');
+  // Перевірка обов'язкових полів
+  if(!startTime || !calcMonth) {
+    console.log('Не всі обов\'язкові поля заповнені');
     return showError('❗ ЗАПОВНІТЬ ВСІ ОБОВʼЯЗКОВІ ПОЛЯ');
+  }
+  
+  // Якщо дозори ввімкнені, перевіряємо їх поля
+  if (!noPatrol && (!patrolDate || !patrolTime || !patrolPeriod)) {
+    console.log('Поля дозору не заповнені');
+    return showError('❗ ЗАПОВНІТЬ ВСІ ПОЛЯ ДОЗОРУ АБО УВІМКНІТЬ "БЕЗ ДОЗОРІВ"');
   }
 
   const scheduleTypeValue = document.getElementById('scheduleType').value;
@@ -803,61 +941,67 @@ function build(){
   const mStart=new Date(year,month,1,startTime);
   const mEnd=new Date(year,month+1,1,startTime);
 
-  let pStart=new Date(patrolDate);
-  pStart.setHours(patrolTime,0,0,0);
-
-  // Парсинг періодичності дозорів
-  const patrolPeriodValue = patrolPeriod.trim();
+  // Змінні для дозорів (використовуються тільки якщо noPatrol = false)
+  let pStart = null;
   let isDayList = false;
   let patrolDays = [];
   let patrolInterval = 0;
+  let patrolDates = [];
   
-  console.log('Парсинг періодичності:', patrolPeriodValue);
-  
-  if (patrolPeriodValue.includes('/')) {
-    // Формат "1/4" - кожні 4 дні
-    const parts = patrolPeriodValue.split('/');
-    if (parts.length !== 2) {
+  // Парсинг дозорів тільки якщо вони ввімкнені
+  if (!noPatrol) {
+    pStart = new Date(patrolDate);
+    pStart.setHours(patrolTime,0,0,0);
+
+    // Парсинг періодичності дозорів
+    const patrolPeriodValue = patrolPeriod.trim();
+    
+    console.log('Парсинг періодичності:', patrolPeriodValue);
+    
+    if (patrolPeriodValue.includes('/')) {
+      // Формат "1/4" - кожні 4 дні
+      const parts = patrolPeriodValue.split('/');
+      if (parts.length !== 2) {
+        return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
+      }
+      const num = parseInt(parts[0]);
+      const denom = parseInt(parts[1]);
+      if (isNaN(num) || isNaN(denom) || denom <= 0) {
+        return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
+      }
+      // Інтервал в годинах: кожні denom днів
+      patrolInterval = denom * 24;
+      console.log('Інтервал дозорів (годин):', patrolInterval);
+    } else if (patrolPeriodValue.includes(',') || !isNaN(parseInt(patrolPeriodValue))) {
+      // Формат "3,6,11" або просто число
+      isDayList = true;
+      const days = patrolPeriodValue.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
+      if (days.length === 0) {
+        return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДНІВ. ВВЕДІТЬ ЧИСЛА ВІД 1 ДО 31 ЧЕРЕЗ КОМУ');
+      }
+      patrolDays = days;
+      console.log('Дні дозорів:', patrolDays);
+    } else {
       return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
     }
-    const num = parseInt(parts[0]);
-    const denom = parseInt(parts[1]);
-    if (isNaN(num) || isNaN(denom) || denom <= 0) {
-      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
+
+    // Дні дозорів для формату днів місяця
+    if (isDayList) {
+      // Створюємо дати дозорів для кожного дня в обраному місяці
+      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+      patrolDays.forEach(day => {
+        if (day <= lastDayOfMonth) {
+          const patrolStart = new Date(year, month, day, pStart.getHours(), 0, 0);
+          patrolDates.push(patrolStart);
+        }
+      });
+      console.log('Дата дозорів для місяця:', patrolDates);
     }
-    // Інтервал в годинах: кожні denom днів
-    patrolInterval = denom * 24;
-    console.log('Інтервал дозорів (годин):', patrolInterval);
-  } else if (patrolPeriodValue.includes(',') || !isNaN(parseInt(patrolPeriodValue))) {
-    // Формат "3,6,11" або просто число
-    isDayList = true;
-    const days = patrolPeriodValue.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
-    if (days.length === 0) {
-      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДНІВ. ВВЕДІТЬ ЧИСЛА ВІД 1 ДО 31 ЧЕРЕЗ КОМУ');
-    }
-    patrolDays = days;
-    console.log('Дні дозорів:', patrolDays);
-  } else {
-    return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
   }
 
   let html='<div class="table-wrapper"><table><tr><th>Період (12 год)</th>';
   crew.forEach(c=>html+=`<th>${c.n}</th>`);
   html+='</tr>';
-
-  // Дні дозорів для формату днів місяця
-  const patrolDates = [];
-  if (isDayList) {
-    // Створюємо дати дозорів для кожного дня в обраному місяці
-    const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-    patrolDays.forEach(day => {
-      if (day <= lastDayOfMonth) {
-        const patrolStart = new Date(year, month, day, pStart.getHours(), 0, 0);
-        patrolDates.push(patrolStart);
-      }
-    });
-    console.log('Дата дозорів для місяця:', patrolDates);
-  }
 
   // Розрахунок графіку
   for(let t=new Date(mStart);t<mEnd;t.setHours(t.getHours()+STEP)){
@@ -866,34 +1010,36 @@ function build(){
     const dateTo = formatDateForMobile(to);
     html+=`<tr><td>${dateFrom}<br>—<br>${dateTo}</td>`;
 
-    // Перевірка чи є патруль в цей період
+    // Перевірка чи є патруль в цей період (тільки якщо дозори ввімкнені)
     let isPatrol = false;
     
-    if (isDayList) {
-      // Перевірка за днями місяця
-      for (const patrolStart of patrolDates) {
-        const patrolEnd = new Date(patrolStart.getTime() + 24 * 3600000);
-        // Перевіряємо перетин періоду (t, to) з дозором (patrolStart, patrolEnd)
-        if (t < patrolEnd && to > patrolStart) {
-          isPatrol = true;
-          break;
+    if (!noPatrol) {
+      if (isDayList) {
+        // Перевірка за днями місяця
+        for (const patrolStart of patrolDates) {
+          const patrolEnd = new Date(patrolStart.getTime() + 24 * 3600000);
+          // Перевіряємо перетин періоду (t, to) з дозором (patrolStart, patrolEnd)
+          if (t < patrolEnd && to > patrolStart) {
+            isPatrol = true;
+            break;
+          }
         }
-      }
-    } else {
-      // Перевірка за інтервалом (формат "1/4")
-      // Розраховуємо скільки годин пройшло від початку першого дозору
-      const hoursFromPatrolStart = (t - pStart) / 3600000;
-      
-      // Якщо це майбутній дозор або поточний
-      if (hoursFromPatrolStart >= 0) {
-        // Визначаємо номер циклу
-        const cycleNumber = Math.floor(hoursFromPatrolStart / patrolInterval);
-        const startOfCurrentCycle = new Date(pStart.getTime() + cycleNumber * patrolInterval * 3600000);
-        const endOfCurrentCycle = new Date(startOfCurrentCycle.getTime() + 24 * 3600000); // Дозор триває 24 години
+      } else {
+        // Перевірка за інтервалом (формат "1/4")
+        // Розраховуємо скільки годин пройшло від початку першого дозору
+        const hoursFromPatrolStart = (t - pStart) / 3600000;
         
-        // Перевіряємо чи поточний період перетинається з дозором
-        if (t < endOfCurrentCycle && to > startOfCurrentCycle) {
-          isPatrol = true;
+        // Якщо це майбутній дозор або поточний
+        if (hoursFromPatrolStart >= 0) {
+          // Визначаємо номер циклу
+          const cycleNumber = Math.floor(hoursFromPatrolStart / patrolInterval);
+          const startOfCurrentCycle = new Date(pStart.getTime() + cycleNumber * patrolInterval * 3600000);
+          const endOfCurrentCycle = new Date(startOfCurrentCycle.getTime() + 24 * 3600000); // Дозор триває 24 години
+          
+          // Перевіряємо чи поточний період перетинається з дозором
+          if (t < endOfCurrentCycle && to > startOfCurrentCycle) {
+            isPatrol = true;
+          }
         }
       }
     }
