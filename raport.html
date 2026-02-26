@@ -236,7 +236,7 @@ button.share-btn:active {
 
 /* Початок тексту */
 .report-text-start {
-    margin-bottom: 24px;
+    margin-bottom: 13.5px; /* Половина line-height (27px/2) - така ж як між абзацами */
     font-size: 12pt;
     font-weight: normal;
     text-align: left;
@@ -244,7 +244,7 @@ button.share-btn:active {
 
 /* Блок з основним текстом - вирівнювання ПО ШИРИНІ як у Word */
 .text-block {
-    white-space: normal;  /* ЗМІНА: normal замість pre-wrap */
+    white-space: normal;
     text-align: justify;
     text-justify: inter-word;
     line-height: 1.5;
@@ -252,13 +252,16 @@ button.share-btn:active {
     margin: 0;
     padding: 0;
     width: 100%;
-    word-wrap: break-word;  /* Переносить довгі слова */
+    word-wrap: break-word;
     overflow-wrap: break-word;
+    /* Відступ першого рядка для КОЖНОГО абзацу */
+    text-indent: 36px;
 }
 
-/* Відступ першого рядка абзацу */
-.text-block.indent {
-    text-indent: 36px;
+/* Відступ між абзацами */
+.paragraph-spacer {
+    height: 13.5px; /* Половина line-height (27px/2) */
+    width: 100%;
 }
 
 /* Три порожні рядки перед підписом */
@@ -682,13 +685,13 @@ function createMultiPageDocument() {
         currentPageHeight += headerHeight;
     }
     
-    // ВИДАЛЕНО splitIntoLines - працюємо з цілими абзацами
+    // Проходимо по всіх абзацах
     for (let pIndex = 0; pIndex < paragraphs.length; pIndex++) {
         const paragraph = paragraphs[pIndex];
         
-        // Розраховуємо приблизну висоту абзацу (грубо, але для розбиття на сторінки достатньо)
+        // Розраховуємо приблизну висоту абзацу
         const wordsCount = paragraph.split(' ').length;
-        const linesCount = Math.ceil(wordsCount / 12); // приблизно 12 слів на рядок
+        const linesCount = Math.ceil(wordsCount / 12);
         const paragraphHeight = linesCount * lineHeight;
         
         const isLastParagraph = (pIndex === paragraphs.length - 1);
@@ -715,8 +718,7 @@ function createMultiPageDocument() {
         
         // Додаємо абзац
         currentPageParagraphs.push({
-            text: paragraph,
-            isFirstInPage: currentPageParagraphs.length === 0 && !isFirstPage
+            text: paragraph
         });
         
         currentPageHeight += paragraphHeight;
@@ -725,12 +727,12 @@ function createMultiPageDocument() {
         if (pIndex < paragraphs.length - 1) {
             if (currentPageHeight + lineHeight/2 > pageHeight - bottomMargin) {
                 pages.push({
-                    paragraphs: [...currentPageParagraphs.slice(0, -1)], // видаляємо останній доданий абзац
+                    paragraphs: [...currentPageParagraphs.slice(0, -1)],
                     isFirst: isFirstPage,
                     hasSignature: false
                 });
                 
-                currentPageParagraphs = [currentPageParagraphs[currentPageParagraphs.length - 1]]; // залишаємо тільки останній
+                currentPageParagraphs = [currentPageParagraphs[currentPageParagraphs.length - 1]];
                 currentPageHeight = topMargin + paragraphHeight;
                 isFirstPage = false;
             } else {
@@ -763,20 +765,22 @@ function createMultiPageDocument() {
             
             if (currentReportType === 'application') {
                 content += '<div class="report-text-start">Дійсним доповідаю, що:</div>';
+                
+                // Додаємо відступ після "Дійсним доповідаю, що:" такий самий як між абзацами
+                if (page.paragraphs && page.paragraphs.length > 0) {
+                    content += '<div class="paragraph-spacer"></div>';
+                }
             }
         }
         
         if (page.paragraphs && page.paragraphs.length > 0) {
             page.paragraphs.forEach((p, pIndex) => {
-                const needIndent = p.isFirstInPage;
-                const indentClass = needIndent ? 'indent' : '';
+                // Кожен абзац
+                content += `<div class="text-block">${p.text}</div>`;
                 
-                // Кожен абзац - як окремий блок, перенесення слів автоматичне
-                content += `<div class="text-block ${indentClass}">${p.text}</div>`;
-                
-                // Додаємо невеликий відступ між абзацами (крім останнього)
+                // Додаємо відступ між абзацами (крім останнього)
                 if (pIndex < page.paragraphs.length - 1) {
-                    content += `<div style="height: ${lineHeight/2}px;"></div>`;
+                    content += '<div class="paragraph-spacer"></div>';
                 }
             });
         }
