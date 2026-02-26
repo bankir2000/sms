@@ -8,6 +8,7 @@
 <title>Рапорт</title>
 
 <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 :root {
@@ -44,7 +45,7 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     max-width: 600px;
     margin: 0 auto;
-    padding-bottom: 80px; /* Додано відступ для фіксованих кнопок */
+    padding-bottom: 80px;
 }
 
 .controls b {
@@ -82,8 +83,6 @@ body {
 
 textarea {
     width: 100%;
-    height: 90px;
-    margin-bottom: 15px;
     padding: 12px;
     font-size: 16px;
     font-family: Arial, sans-serif;
@@ -91,10 +90,17 @@ textarea {
     border-radius: 8px;
     background: #1e1e1e;
     color: var(--text-light);
-    resize: none;
+    resize: vertical;
     -webkit-appearance: none;
     appearance: none;
     touch-action: manipulation;
+    margin-bottom: 15px;
+}
+
+#text1 {
+    height: 400px;
+    min-height: 300px;
+    max-height: 600px;
 }
 
 textarea:focus {
@@ -155,6 +161,14 @@ button.secondary:active {
     background: #1976d2;
 }
 
+button.share-btn {
+    background: #00acc1;
+}
+
+button.share-btn:active {
+    background: #00838f;
+}
+
 .settings-btn {
     width: 100%;
     margin: 5px 0 15px;
@@ -171,7 +185,7 @@ button.secondary:active {
     background: white;
     color: #000000;
     font-family: 'Times New Roman', Times, serif;
-    font-size: 14pt;
+    font-size: 12pt;
     line-height: 1.5;
     position: absolute;
     left: -9999px;
@@ -182,32 +196,39 @@ button.secondary:active {
 /* Контейнер вмісту А4 */
 .raport-content {
     width: 100%;
-    padding: 80px 40px 80px 113px;
+    padding: 57px 28px 57px 85px; /* верх/низ 20мм = 57px, ліво 30мм = 85px, право 10мм = 28px */
     box-sizing: border-box;
     background: white;
 }
 
-/* Розділювач сторінок - білий блок висотою А4 */
-.page-break {
+/* Окрема сторінка */
+.page {
     width: 794px;
-    height: 60px;
+    min-height: 1123px;
     background: white;
-    display: block;
+    position: relative;
+    page-break-after: always;
+    break-after: page;
+}
+
+.page:last-child {
+    page-break-after: auto;
+    break-after: auto;
 }
 
 /* Адресата праворуч */
 .recipient {
     text-align: right;
-    margin-bottom: 60px; /* 15mm */
+    margin-bottom: 48px;
     white-space: pre-line;
     line-height: 1.5;
-    font-size: 14pt;
+    font-size: 12pt;
 }
 
 /* Заголовок "Рапорт" */
 .report-title {
     text-align: center;
-    margin-bottom: 45px; /* 11mm */
+    margin-bottom: 36px;
     font-size: 14pt;
     font-weight: bold;
     text-transform: uppercase;
@@ -215,43 +236,49 @@ button.secondary:active {
 
 /* Початок тексту */
 .report-text-start {
-    margin-bottom: 20px;
-    font-size: 14pt;
-}
-
-/* Блок з основним текстом */
-.text-block {
-    white-space: pre-line;
-    text-align: justify;
-    line-height: 1.5;
-    font-size: 14pt;
-    margin-bottom: 10px;
-}
-
-#block1 {
-    text-indent: 35px;
-    margin-bottom: 30px;
-}
-
-/* Блок "На БЧ" */
-#block2 {
+    margin-bottom: 24px;
+    font-size: 12pt;
+    font-weight: normal;
     text-align: left;
-    white-space: pre-line;
-    line-height: 1.5;
-    margin-bottom: calc(7 * 1.5 * 14pt); /* 7 порожніх рядків */
 }
 
-/* Позиціонування підпису, посади та ПІБ */
+/* Блок з основним текстом - вирівнювання ПО ШИРИНІ як у Word */
+.text-block {
+    white-space: normal;  /* ЗМІНА: normal замість pre-wrap */
+    text-align: justify;
+    text-justify: inter-word;
+    line-height: 1.5;
+    font-size: 12pt;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    word-wrap: break-word;  /* Переносить довгі слова */
+    overflow-wrap: break-word;
+}
+
+/* Відступ першого рядка абзацу */
+.text-block.indent {
+    text-indent: 36px;
+}
+
+/* Три порожні рядки перед підписом */
+.signature-space {
+    height: 81px;
+    width: 100%;
+}
+
+/* Підпис */
 .signature-row {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    margin-top: 0;
 }
 
 .position-block {
     text-align: left;
     width: 200px;
-    font-size: 14pt;
+    font-size: 12pt;
     white-space: pre-line;
 }
 
@@ -261,7 +288,7 @@ button.secondary:active {
 }
 
 .signature-image-block img {
-    height: 60px;
+    height: 50px;
     max-width: 200px;
     object-fit: contain;
     display: block;
@@ -271,18 +298,18 @@ button.secondary:active {
 .name-block {
     text-align: right;
     width: 200px;
-    font-size: 14pt;
+    font-size: 12pt;
     white-space: pre-line;
 }
 
-/* Дата - на новому рядку після підпису зліва */
+/* Дата */
 .date-block {
     text-align: left;
-    font-size: 14pt;
-    margin-top: calc(1.5 * 14pt); /* один рядок відступу */
+    font-size: 12pt;
+    margin-top: 12px;
 }
 
-/* Модальне вікно налаштувань */
+/* Модальне вікно */
 .modal {
     display: none;
     position: fixed;
@@ -326,7 +353,7 @@ button.secondary:active {
     flex: 1;
 }
 
-/* Індикатор завантаження */
+/* Індикатори */
 .loading {
     display: none;
     position: fixed;
@@ -340,6 +367,45 @@ button.secondary:active {
     z-index: 3000;
     font-size: 18px;
 }
+
+.progress {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.9);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 3000;
+    text-align: center;
+}
+
+.progress-bar {
+    width: 300px;
+    height: 20px;
+    background: #333;
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: #4caf50;
+    width: 0%;
+    transition: width 0.3s;
+}
+
+/* Підказка */
+.hint {
+    font-size: 12px;
+    color: #aaa;
+    margin-top: -10px;
+    margin-bottom: 15px;
+    padding-left: 5px;
+}
 </style>
 </head>
 
@@ -347,6 +413,7 @@ button.secondary:active {
 
 <div class="controls">
     <button class="settings-btn" onclick="openSettingsModal()">🔧 Налаштування рапорту</button>
+    
     <b>📅 Дата рапорту:</b>
     <input type="date" id="reportDate" style="width:100%;margin-bottom:15px;padding:10px;font-size:16px;border-radius:8px;border:2px solid var(--primary-color);background:#1e1e1e;color:#fff;">
 
@@ -361,11 +428,9 @@ button.secondary:active {
         </label>
     </div>
 
-    <b id="label1">📄 Вставте смс по застосуванню:</b>
-    <textarea id="text1" placeholder="Введіть текст..."></textarea>
-
-    <b id="label2">📄 Вставте смс хто на БЧ:</b>
-    <textarea id="text2" placeholder="Введіть текст..."></textarea>
+    <b id="label1">📄 Введіть текст рапорта:</b>
+    <textarea id="text1" placeholder="Введіть текст рапорта..."></textarea>
+    <div class="hint">💡 Ви можете вводити довгий текст - він автоматично розіб'ється на сторінки</div>
 
     <b>🖊️ Підпис пальцем або стилусом:</b>
     <canvas id="signature-pad"></canvas>
@@ -374,43 +439,23 @@ button.secondary:active {
 <div class="fixed-buttons">
     <button onclick="clearPad()">🗑️ Очистити підпис</button>
     <button onclick="applySignature()">📝 Застосувати підпис</button>
-    <button onclick="shareRaport()">📤 Поширити</button>
+    <button onclick="saveAndShare()" class="share-btn">📤 Зберегти і поширити</button>
 </div>
 
-<!-- Прихована сторінка рапорту для збереження -->
-<div id="raportPage">
-    <div class="raport-content">
-        <div class="recipient" id="cmdBlock"></div>
-        
-        <div class="report-title">Рапорт</div>
-        <div class="report-text-start">Дійсним доповідаю, що:</div>
-        
-        <div class="text-block" id="block1"></div>
-        <div class="text-block" id="block2"></div>
-        
-        <div class="signature-row">
-            <div class="position-block" id="posBlock"></div>
-            <div class="signature-image-block">
-                <img id="signImg">
-            </div>
-            <div class="name-block" id="nameBlock"></div>
-        </div>
-        
-        <div class="date-block" id="date"></div>
-    </div>
-</div>
+<!-- Контейнер для багатосторінкового рапорту -->
+<div id="raportPage"></div>
 
 <!-- Модальне вікно налаштувань -->
 <div class="modal" id="settingsModal">
     <div class="modal-content">
         <b>Командиру</b>
-        <textarea id="cmdInput" placeholder="📄 Введіть дані командира"></textarea>
+        <textarea id="cmdInput" placeholder="📄 Введіть дані командира (наприклад: Командиру в/ч А7097 капітану Кармазь О.В.)"></textarea>
         
         <b>Посада</b>
-        <textarea id="posInput" placeholder="📄 Введіть вашу посаду"></textarea>
+        <textarea id="posInput" placeholder="📄 Введіть вашу посаду (наприклад: Командир 6 еквід 5 еквз З ЗКР)"></textarea>
         
         <b>ПІБ</b>
-        <textarea id="nameInput" placeholder="📄 Введіть ваше ПІБ"></textarea>
+        <textarea id="nameInput" placeholder="📄 Введіть ваше ПІБ (наприклад: молодший сержант Романенко Р.П)"></textarea>
         
         <div class="button-row">
             <button onclick="saveSettings()">💾 Зберегти</button>
@@ -419,12 +464,20 @@ button.secondary:active {
     </div>
 </div>
 
-<div class="loading" id="loading">Генерується рапорт А4...</div>
+<div class="loading" id="loading">Генерується PDF...</div>
+
+<div class="progress" id="progress">
+    <div id="progressText">Генерація PDF...</div>
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
+</div>
 
 <script>
+// ==================== БАЗОВІ НАЛАШТУВАННЯ ====================
+
 // Вибір дати
 const dateInput = document.getElementById('reportDate');
-const dateElement = document.getElementById('date');
 
 function setTodayDate() {
     const now = new Date();
@@ -432,15 +485,13 @@ function setTodayDate() {
     const mm = String(now.getMonth() + 1).padStart(2, '0');
     const dd = String(now.getDate()).padStart(2, '0');
     dateInput.value = `${yyyy}-${mm}-${dd}`;
-    updateDateFromInput();
 }
 
-function updateDateFromInput() {
-    const [year, month, day] = dateInput.value.split('-');
-    dateElement.innerText = `${day}.${month}.${year} р.`;
+function formatDate(dateStr) {
+    const [year, month, day] = dateStr.split('-');
+    return `${day}.${month}.${year} р.`;
 }
 
-dateInput.addEventListener('change', updateDateFromInput);
 setTodayDate();
 
 // Мобільна оптимізація
@@ -455,52 +506,28 @@ setTodayDate();
     }, false);
 })();
 
-// Текстові блоки
+// Текстовий блок
 const text1 = document.getElementById('text1');
-const text2 = document.getElementById('text2');
-const block1 = document.getElementById('block1');
-const block2 = document.getElementById('block2');
-
-// ДОДАНО: Змінні для міток
 const label1 = document.getElementById('label1');
-const label2 = document.getElementById('label2');
 
-// ДОДАНО: Глобальна змінна для типу рапорту
+// Глобальна змінна для типу рапорту
 let currentReportType = 'application';
 
-text1.addEventListener('input', () => {
-    block1.innerText = text1.value;
-});
-
-text2.addEventListener('input', () => {
-    block2.innerText = text2.value;
-});
-
-// ДОДАНО: Функція зміни типу рапорту
+// Функція зміни типу рапорту
 function changeReportType() {
     const reportType = document.querySelector('input[name="reportType"]:checked').value;
-    const reportStartElement = document.querySelector('.report-text-start');
     
-    currentReportType = reportType; // Зберігаємо поточний тип
+    currentReportType = reportType;
     
     if (reportType === 'simple') {
-        // Простий рапорт
         label1.innerText = '📄 Введіть текст рапорта:';
-        label2.innerText = '📄 Необов\'язкове поле для заповнення:';
-        if (reportStartElement) {
-            reportStartElement.style.display = 'none';
-        }
     } else {
-        // Рапорт по застосуванню
         label1.innerText = '📄 Вставте смс по застосуванню:';
-        label2.innerText = '📄 Вставте смс хто на БЧ:';
-        if (reportStartElement) {
-            reportStartElement.style.display = 'block';
-        }
     }
 }
 
-// Підпис
+// ==================== ПІДПИС ====================
+
 const canvas = document.getElementById('signature-pad');
 const ctx = canvas.getContext('2d');
 let drawing = false;
@@ -584,10 +611,10 @@ function clearPad() {
 }
 
 function applySignature() {
-    const signImg = document.getElementById('signImg');
-    signImg.src = canvas.toDataURL();
-    localStorage.setItem('signature', signImg.src);
+    localStorage.setItem('signature', canvas.toDataURL());
 }
+
+// ==================== ДОПОМІЖНІ ФУНКЦІЇ ====================
 
 // Витяг дати і часу з тексту для імені файлу
 function extractDateTime(text) {
@@ -598,142 +625,190 @@ function extractDateTime(text) {
         let month = parts[1].padStart(2, '0');
         let year = parts[2].length === 2 ? '20' + parts[2] : parts[2];
         const time = match[2].replace(':', '-');
-        return `Рапорт_${day}-${month}-${year}_${time}`;
+        return `${day}-${month}-${year}_${time}`;
     }
     return null;
 }
 
-// Генерація зображення А4
-async function shareRaport() {
-    const loading = document.getElementById('loading');
-    try {
-        loading.style.display = 'block';
-        
-        const raportPage = document.getElementById('raportPage');
-        const reportStartElement = raportPage.querySelector('.report-text-start');
-        if (reportStartElement) {
-            if (currentReportType === 'simple') {
-                reportStartElement.style.display = 'none';
-            } else {
-                reportStartElement.style.display = 'block';
-            }
-        }
-        
-        // Тимчасово показуємо рапорт
-        const originalPosition = raportPage.style.position;
-        const originalLeft = raportPage.style.left;
-        const originalTop = raportPage.style.top;
-        const originalZIndex = raportPage.style.zIndex;
-        const originalDisplay = raportPage.style.display;
-        
-        raportPage.style.position = 'fixed';
-        raportPage.style.left = '50%';
-        raportPage.style.top = '50%';
-        raportPage.style.transform = 'translate(-50%, -50%)';
-        raportPage.style.zIndex = '9999';
-        raportPage.style.display = 'block';
-        
-        await waitForImages();
-        
-        // Вимірюємо висоту контенту
-        const contentHeight = raportPage.scrollHeight;
-        const pageHeight = 1123;
-        
-        // Якщо контент більше однієї сторінки, додаємо роздільник
-        let totalHeight = contentHeight;
-        if (contentHeight > pageHeight) {
-            // Додаємо білий розд ільник між сторінками
-            const pageBreak = document.createElement('div');
-            pageBreak.className = 'page-break';
-            
-            // Вставляємо роздільник після першої сторінки
-            const content = raportPage.querySelector('.raport-content');
-            content.style.paddingBottom = '60px'; // Додатковий відступ
-            
-            totalHeight = Math.ceil(contentHeight / pageHeight) * pageHeight + 60;
-        }
-        
-        raportPage.style.height = totalHeight + 'px';
-        
-        const c = await html2canvas(raportPage, {
-            scale: 3,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            width: 794,
-            height: totalHeight,
-            windowWidth: 794,
-            windowHeight: totalHeight,
-            onclone: function(clonedDoc) {
-                const clonedPaper = clonedDoc.getElementById('raportPage');
-                clonedPaper.style.position = 'fixed';
-                clonedPaper.style.left = '0';
-                clonedPaper.style.top = '0';
-                clonedPaper.style.transform = 'none';
-                clonedPaper.style.display = 'block';
-                clonedPaper.style.height = totalHeight + 'px';
-            }
-        });
-        
-        // Повертаємо оригінальні стилі
-        raportPage.style.position = originalPosition;
-        raportPage.style.left = originalLeft;
-        raportPage.style.top = originalTop;
-        raportPage.style.transform = '';
-        raportPage.style.zIndex = originalZIndex;
-        raportPage.style.display = originalDisplay;
-        raportPage.style.height = '';
-        
-        // Видаляємо додатковий padding
-        const content = raportPage.querySelector('.raport-content');
-        if (content) content.style.paddingBottom = '';
-        
-        // Конвертуємо в Blob
-        const blob = await new Promise(resolve => {
-            c.toBlob(resolve, "image/jpeg", 0.95);
-        });
-        
-        // Генерація імені файлу
-        let nameFromText = extractDateTime(text1.value);
-        let today = new Date();
-        let fileName = nameFromText ? nameFromText + ".jpg"
-            : `Рапорт_${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}.jpg`;
-        
-        const file = new File([blob], fileName, {type: "image/jpeg"});
-        
-        // Web Share API
-        if (navigator.share && navigator.canShare && navigator.canShare({files: [file]})) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: "Рапорт"
-                });
-                loading.style.display = 'none';
-                return;
-            } catch (e) {
-                console.log("Web Share API не підтримується:", e);
-            }
-        }
-        
-        // Fallback завантаження
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = fileName;
-        document.body.appendChild(a);
-        a.click();
+// Функція оновлення прогресу
+function updateProgress(percent, message) {
+    const progress = document.getElementById('progress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    progress.style.display = 'block';
+    progressFill.style.width = percent + '%';
+    progressText.textContent = message || 'Генерація PDF...';
+    
+    if (percent >= 100) {
         setTimeout(() => {
-            document.body.removeChild(a);
-            URL.revokeObjectURL(a.href);
-            loading.style.display = 'none';
-        }, 100);
-        
-        alert(`Рапорт збережено як "${fileName}"`);
-        
-    } catch (error) {
-        console.error('Помилка при генерації рапорту:', error);
-        loading.style.display = 'none';
-        alert('Помилка при збереженні рапорту. Спробуйте ще раз.');
+            progress.style.display = 'none';
+        }, 500);
     }
+}
+
+// ==================== СТВОРЕННЯ БАГАТОСТОРІНКОВОГО ДОКУМЕНТА ====================
+
+function createMultiPageDocument() {
+    const container = document.getElementById('raportPage');
+    container.innerHTML = '';
+    
+    const cmdText = localStorage.getItem('cmd') || "Командиру в/ч А7097 капітану Кармазь О.В.";
+    const posText = localStorage.getItem('pos') || "Командир 6 еквід 5 еквз З ЗКР";
+    const nameText = localStorage.getItem('name') || "молодший сержант Романенко Р.П";
+    const signature = localStorage.getItem('signature') || '';
+    
+    // Параметри сторінки
+    const pageHeight = 1123;
+    const topMargin = 57;
+    const bottomMargin = 57;
+    const lineHeight = 27;
+    const signatureSpace = 81;
+    const signatureHeight = 150;
+    const headerHeight = 120;
+    
+    const requiredForSignature = signatureSpace + signatureHeight;
+    
+    const paragraphs = text1.value.split('\n').filter(p => p.trim() !== '');
+    
+    if (paragraphs.length === 0) return 0;
+    
+    let pages = [];
+    let currentPageParagraphs = [];
+    let currentPageHeight = topMargin;
+    let isFirstPage = true;
+    
+    if (isFirstPage) {
+        currentPageHeight += headerHeight;
+    }
+    
+    // ВИДАЛЕНО splitIntoLines - працюємо з цілими абзацами
+    for (let pIndex = 0; pIndex < paragraphs.length; pIndex++) {
+        const paragraph = paragraphs[pIndex];
+        
+        // Розраховуємо приблизну висоту абзацу (грубо, але для розбиття на сторінки достатньо)
+        const wordsCount = paragraph.split(' ').length;
+        const linesCount = Math.ceil(wordsCount / 12); // приблизно 12 слів на рядок
+        const paragraphHeight = linesCount * lineHeight;
+        
+        const isLastParagraph = (pIndex === paragraphs.length - 1);
+        
+        // Для останнього абзацу резервуємо місце під підпис
+        const requiredSpace = isLastParagraph 
+            ? paragraphHeight + requiredForSignature + 20
+            : paragraphHeight + 20;
+        
+        // Якщо не вміщається на поточній сторінці
+        if (currentPageHeight + requiredSpace > pageHeight - bottomMargin) {
+            // Зберігаємо поточну сторінку
+            pages.push({
+                paragraphs: [...currentPageParagraphs],
+                isFirst: isFirstPage,
+                hasSignature: false
+            });
+            
+            // Починаємо нову сторінку
+            currentPageParagraphs = [];
+            currentPageHeight = topMargin;
+            isFirstPage = false;
+        }
+        
+        // Додаємо абзац
+        currentPageParagraphs.push({
+            text: paragraph,
+            isFirstInPage: currentPageParagraphs.length === 0 && !isFirstPage
+        });
+        
+        currentPageHeight += paragraphHeight;
+        
+        // Додаємо порожній рядок між абзацами (крім останнього)
+        if (pIndex < paragraphs.length - 1) {
+            if (currentPageHeight + lineHeight/2 > pageHeight - bottomMargin) {
+                pages.push({
+                    paragraphs: [...currentPageParagraphs.slice(0, -1)], // видаляємо останній доданий абзац
+                    isFirst: isFirstPage,
+                    hasSignature: false
+                });
+                
+                currentPageParagraphs = [currentPageParagraphs[currentPageParagraphs.length - 1]]; // залишаємо тільки останній
+                currentPageHeight = topMargin + paragraphHeight;
+                isFirstPage = false;
+            } else {
+                currentPageHeight += lineHeight/2;
+            }
+        }
+    }
+    
+    // Додаємо останню сторінку з підписом
+    if (currentPageParagraphs.length > 0) {
+        pages.push({
+            paragraphs: [...currentPageParagraphs],
+            isFirst: isFirstPage,
+            hasSignature: true
+        });
+    }
+    
+    // Створюємо HTML для кожної сторінки
+    pages.forEach((page, index) => {
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'page';
+        
+        let content = '<div class="raport-content">';
+        
+        if (page.isFirst) {
+            content += `
+                <div class="recipient">${cmdText}</div>
+                <div class="report-title">РАПОРТ</div>
+            `;
+            
+            if (currentReportType === 'application') {
+                content += '<div class="report-text-start">Дійсним доповідаю, що:</div>';
+            }
+        }
+        
+        if (page.paragraphs && page.paragraphs.length > 0) {
+            page.paragraphs.forEach((p, pIndex) => {
+                const needIndent = p.isFirstInPage;
+                const indentClass = needIndent ? 'indent' : '';
+                
+                // Кожен абзац - як окремий блок, перенесення слів автоматичне
+                content += `<div class="text-block ${indentClass}">${p.text}</div>`;
+                
+                // Додаємо невеликий відступ між абзацами (крім останнього)
+                if (pIndex < page.paragraphs.length - 1) {
+                    content += `<div style="height: ${lineHeight/2}px;"></div>`;
+                }
+            });
+        }
+        
+        if (page.hasSignature) {
+            const date = formatDate(dateInput.value);
+            
+            let signatureHTML = '';
+            if (signature) {
+                signatureHTML = `<img src="${signature}" style="height: 50px; max-width: 200px; object-fit: contain;">`;
+            }
+            
+            content += '<div class="signature-space"></div>';
+            
+            content += `
+                <div class="signature-row">
+                    <div class="position-block">${posText}</div>
+                    <div class="signature-image-block">
+                        ${signatureHTML}
+                    </div>
+                    <div class="name-block">${nameText}</div>
+                </div>
+                <div class="date-block">${date}</div>
+            `;
+        }
+        
+        content += '</div>';
+        pageDiv.innerHTML = content;
+        container.appendChild(pageDiv);
+    });
+    
+    return pages.length;
 }
 
 // Очікування завантаження зображень
@@ -749,7 +824,155 @@ function waitForImages() {
     return Promise.all(promises);
 }
 
-// Модальне вікно налаштувань
+// ==================== ОСНОВНА ФУНКЦІЯ ====================
+
+async function saveAndShare() {
+    const loading = document.getElementById('loading');
+    
+    if (!text1.value.trim()) {
+        alert('❌ Введіть текст рапорту');
+        return;
+    }
+    
+    try {
+        loading.style.display = 'block';
+        updateProgress(10, 'Створення сторінок...');
+        
+        const numPages = createMultiPageDocument();
+        
+        updateProgress(30, `Згенеровано ${numPages} сторінок...`);
+        
+        const raportPage = document.getElementById('raportPage');
+        
+        const originalPosition = raportPage.style.position;
+        const originalLeft = raportPage.style.left;
+        const originalTop = raportPage.style.top;
+        
+        raportPage.style.position = 'fixed';
+        raportPage.style.left = '50%';
+        raportPage.style.top = '50%';
+        raportPage.style.transform = 'translate(-50%, -50%)';
+        raportPage.style.zIndex = '9999';
+        raportPage.style.display = 'block';
+        
+        await waitForImages();
+        
+        updateProgress(50, 'Генерація зображень...');
+        
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'px',
+            format: 'a4'
+        });
+        
+        const pages = raportPage.children;
+        
+        for (let i = 0; i < pages.length; i++) {
+            updateProgress(50 + (i * 40 / pages.length), `Обробка сторінки ${i + 1} з ${pages.length}...`);
+            
+            for (let j = 0; j < pages.length; j++) {
+                pages[j].style.display = j === i ? 'block' : 'none';
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const canvas = await html2canvas(raportPage, {
+                scale: 3,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                width: 794,
+                height: 1123,
+                windowWidth: 794,
+                windowHeight: 1123
+            });
+            
+            const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            const imgWidth = pdf.internal.pageSize.getWidth();
+            const imgHeight = pdf.internal.pageSize.getHeight();
+            
+            if (i > 0) {
+                pdf.addPage();
+            }
+            
+            pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+        }
+        
+        updateProgress(95, 'Збереження файлу...');
+        
+        raportPage.style.position = originalPosition;
+        raportPage.style.left = originalLeft;
+        raportPage.style.top = originalTop;
+        raportPage.style.transform = '';
+        raportPage.style.zIndex = '';
+        
+        for (let i = 0; i < pages.length; i++) {
+            pages[i].style.display = 'block';
+        }
+        
+        let nameFromText = extractDateTime(text1.value);
+        let today = new Date();
+        
+        let fileName;
+        if (nameFromText) {
+            fileName = `Рапорт_${nameFromText}.pdf`;
+        } else {
+            fileName = `Рапорт_${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}.pdf`;
+        }
+        
+        const pdfBlob = pdf.output('blob');
+        
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+        
+        let shared = false;
+        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+        
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            try {
+                await navigator.share({
+                    files: [file],
+                    title: 'Рапорт',
+                    text: ''
+                });
+                shared = true;
+            } catch (e) {
+                console.log('Поширення скасовано');
+            }
+        }
+        
+        updateProgress(100, 'Готово!');
+        loading.style.display = 'none';
+        
+        let message = `✅ Рапорт збережено!\n\n📁 Файл: ${fileName}\n📄 Сторінок: ${pages.length}`;
+        
+        if (shared) {
+            message += '\n\n📤 Файл поширено!';
+        }
+        
+        setTimeout(() => {
+            alert(message);
+        }, 500);
+        
+    } catch (error) {
+        console.error('Помилка:', error);
+        loading.style.display = 'none';
+        document.getElementById('progress').style.display = 'none';
+        alert('❌ Помилка: ' + error.message);
+    }
+}
+
+// ==================== МОДАЛЬНЕ ВІКНО ====================
+
 const settingsModal = document.getElementById('settingsModal');
 const cmdInput = document.getElementById('cmdInput');
 const posInput = document.getElementById('posInput');
@@ -771,52 +994,26 @@ function saveSettings() {
     localStorage.setItem('cmd', cmdInput.value);
     localStorage.setItem('pos', posInput.value);
     localStorage.setItem('name', nameInput.value);
-    applySettings();
     closeSettingsModal();
+    alert('✅ Налаштування збережено');
 }
 
-function applySettings() {
-    document.getElementById('cmdBlock').innerText = localStorage.getItem('cmd') || "Налаштуй рапорт";
-    document.getElementById('posBlock').innerText = localStorage.getItem('pos') || "Налаштуй рапорт";
-    document.getElementById('nameBlock').innerText = localStorage.getItem('name') || "Налаштуй рапорт";
-}
-
-// Закриття модалок по кліку на фон
 settingsModal.addEventListener('click', (e) => {
     if (e.target === settingsModal) {
         closeSettingsModal();
     }
 });
 
-// Закриття модалок по Escape
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         if (settingsModal.style.display === 'flex') closeSettingsModal();
     }
 });
 
-// Ініціалізація
-applySettings();
-
-// Відновлення автозбереженого тексту (тільки для налаштувань та підпису)
 window.addEventListener('load', () => {
-    // Відновлення підпису
-    const savedSignature = localStorage.getItem('signature');
-    if (savedSignature) {
-        document.getElementById('signImg').src = savedSignature;
-    }
-    
-    // Ініціалізація типу рапорту
     changeReportType();
 });
 </script>
 
 </body>
-
 </html>
-
-
-
-
-
-
