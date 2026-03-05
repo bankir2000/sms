@@ -169,6 +169,14 @@ button.share-btn:active {
     background: #00838f;
 }
 
+button.signal-btn {
+    background: #7b1fa2;
+}
+
+button.signal-btn:active {
+    background: #6a1b9a;
+}
+
 .settings-btn {
     width: 100%;
     margin: 5px 0 15px;
@@ -196,7 +204,7 @@ button.share-btn:active {
 /* Контейнер вмісту А4 */
 .raport-content {
     width: 100%;
-    padding: 57px 28px 57px 85px; /* верх/низ 20мм = 57px, ліво 30мм = 85px, право 10мм = 28px */
+    padding: 57px 28px 57px 85px;
     box-sizing: border-box;
     background: white;
 }
@@ -236,13 +244,13 @@ button.share-btn:active {
 
 /* Початок тексту */
 .report-text-start {
-    margin-bottom: 13.5px; /* Половина line-height (27px/2) - така ж як між абзацами */
+    margin-bottom: 13.5px;
     font-size: 12pt;
     font-weight: normal;
     text-align: left;
 }
 
-/* Блок з основним текстом - вирівнювання ПО ШИРИНІ як у Word */
+/* Блок з основним текстом */
 .text-block {
     white-space: normal;
     text-align: justify;
@@ -254,13 +262,12 @@ button.share-btn:active {
     width: 100%;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    /* Відступ першого рядка для КОЖНОГО абзацу */
     text-indent: 36px;
 }
 
 /* Відступ між абзацами */
 .paragraph-spacer {
-    height: 13.5px; /* Половина line-height (27px/2) */
+    height: 13.5px;
     width: 100%;
 }
 
@@ -443,6 +450,7 @@ button.share-btn:active {
     <button onclick="clearPad()">🗑️ Очистити підпис</button>
     <button onclick="applySignature()">📝 Застосувати підпис</button>
     <button onclick="saveAndShare()" class="share-btn">📤 Зберегти і поширити</button>
+    <button onclick="shareToSignal()" class="signal-btn">📱 Signal (Фото)</button>
 </div>
 
 <!-- Контейнер для багатосторінкового рапорту -->
@@ -828,7 +836,219 @@ function waitForImages() {
     return Promise.all(promises);
 }
 
-// ==================== ОСНОВНА ФУНКЦІЯ ====================
+// ==================== ФУНКЦІЯ ДЛЯ ПОШИРЕННЯ В SIGNAL (PDF + ФОТО) ====================
+
+async function shareToSignal() {
+    const loading = document.getElementById('loading');
+    
+    if (!text1.value.trim()) {
+        alert('❌ Введіть текст рапорту');
+        return;
+    }
+    
+    try {
+        loading.style.display = 'block';
+        updateProgress(10, 'Створення сторінок...');
+        
+        const numPages = createMultiPageDocument();
+        
+        updateProgress(30, `Згенеровано ${numPages} сторінок...`);
+        
+        const raportPage = document.getElementById('raportPage');
+        
+        const originalPosition = raportPage.style.position;
+        const originalLeft = raportPage.style.left;
+        const originalTop = raportPage.style.top;
+        
+        raportPage.style.position = 'fixed';
+        raportPage.style.left = '50%';
+        raportPage.style.top = '50%';
+        raportPage.style.transform = 'translate(-50%, -50%)';
+        raportPage.style.zIndex = '9999';
+        raportPage.style.display = 'block';
+        
+        await waitForImages();
+        
+        updateProgress(50, 'Генерація PDF та фото...');
+        
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'px',
+            format: 'a4'
+        });
+        
+        const pages = raportPage.children;
+        const jpegFiles = [];
+        
+        for (let i = 0; i < pages.length; i++) {
+            updateProgress(50 + (i * 40 / pages.length), `Обробка сторінки ${i + 1} з ${pages.length}...`);
+            
+            for (let j = 0; j < pages.length; j++) {
+                pages[j].style.display = j === i ? 'block' : 'none';
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const canvas = await html2canvas(raportPage, {
+                scale: 2, // Зменшуємо для кращої сумісності
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+                width: 794,
+                height: 1123,
+                windowWidth: 794,
+                windowHeight: 1123
+            });
+            
+            // Для PDF використовуємо вищу якість
+            const pdfImgData = canvas.toDataURL('image/jpeg', 0.98);
+            
+            // Для JPEG в Signal - створюємо окремі файли
+            const jpegBlob = await (await fetch(canvas.toDataURL('image/jpeg', 0.9))).blob();
+            jpegFiles.push({
+                blob: jpegBlob,
+                name: `Сторінка_${i + 1}.jpg`
+            });
+            
+            const imgWidth = pdf.internal.pageSize.getWidth();
+            const imgHeight = pdf.internal.pageSize.getHeight();
+            
+            if (i > 0) {
+                pdf.addPage();
+            }
+            
+            pdf.addImage(pdfImgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+        }
+        
+        updateProgress(95, 'Підготовка файлів для Signal...');
+        
+        raportPage.style.position = originalPosition;
+        raportPage.style.left = originalLeft;
+        raportPage.style.top = originalTop;
+        raportPage.style.transform = '';
+        raportPage.style.zIndex = '';
+        
+        for (let i = 0; i < pages.length; i++) {
+            pages[i].style.display = 'block';
+        }
+        
+        let nameFromText = extractDateTime(text1.value);
+        let today = new Date();
+        
+        let baseFileName;
+        if (nameFromText) {
+            baseFileName = `Рапорт_${nameFromText}`;
+        } else {
+            baseFileName = `Рапорт_${String(today.getDate()).padStart(2, '0')}-${String(today.getMonth() + 1).padStart(2, '0')}-${today.getFullYear()}`;
+        }
+        
+        const pdfBlob = pdf.output('blob');
+        const pdfFile = new File([pdfBlob], `${baseFileName}.pdf`, { type: 'application/pdf' });
+        
+        // Створюємо масив файлів для поширення (PDF + всі JPEG)
+        const filesToShare = [pdfFile];
+        
+        // Додаємо JPEG файли (максимум 10 для стабільності)
+        const maxJpegFiles = Math.min(jpegFiles.length, 10);
+        for (let i = 0; i < maxJpegFiles; i++) {
+            filesToShare.push(new File([jpegFiles[i].blob], jpegFiles[i].name, { type: 'image/jpeg' }));
+        }
+        
+        updateProgress(98, 'Відкриваємо Signal...');
+        
+        // Поширення в Signal
+        let shared = false;
+        
+        if (navigator.share && navigator.canShare) {
+            try {
+                // Перевіряємо, чи можна поділитися цими файлами
+                if (navigator.canShare({ files: filesToShare })) {
+                    await navigator.share({
+                        files: filesToShare,
+                        title: 'Рапорт',
+                        text: `📄 Рапорт: ${baseFileName}\n📑 PDF для друку + ${jpegFiles.length} фото для перегляду`
+                    });
+                    shared = true;
+                } else {
+                    // Якщо не можна поділитися всіма файлами, пробуємо тільки PDF
+                    alert('Signal не підтримує стільки файлів одночасно. Спробуємо передати PDF...');
+                    
+                    if (navigator.canShare({ files: [pdfFile] })) {
+                        await navigator.share({
+                            files: [pdfFile],
+                            title: 'Рапорт',
+                            text: `📄 Рапорт: ${baseFileName} (PDF для друку)`
+                        });
+                        shared = true;
+                    }
+                }
+            } catch (e) {
+                console.log('Поширення скасовано:', e);
+                
+                // Якщо користувач скасував, не показуємо помилку
+                if (e.name !== 'AbortError') {
+                    alert('Помилка поширення. Файли збережено локально.');
+                }
+            }
+        } else {
+            // Якщо Share API не підтримується, зберігаємо файли локально
+            alert('Ваш браузер не підтримує поширення файлів. Файли буде збережено локально.');
+            
+            // Зберігаємо PDF
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.download = `${baseFileName}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(pdfUrl);
+            }, 100);
+            
+            // Зберігаємо перше JPEG (для прикладу)
+            if (jpegFiles.length > 0) {
+                const jpegUrl = URL.createObjectURL(jpegFiles[0].blob);
+                const a2 = document.createElement('a');
+                a2.href = jpegUrl;
+                a2.download = jpegFiles[0].name;
+                document.body.appendChild(a2);
+                a2.click();
+                setTimeout(() => {
+                    document.body.removeChild(a2);
+                    URL.revokeObjectURL(jpegUrl);
+                }, 100);
+            }
+        }
+        
+        updateProgress(100, 'Готово!');
+        loading.style.display = 'none';
+        
+        let message = `✅ Підготовлено для Signal!\n\n`;
+        message += `📁 Файли:\n`;
+        message += `• ${baseFileName}.pdf (для друку)\n`;
+        message += `• ${jpegFiles.length} фото (для перегляду)\n\n`;
+        
+        if (shared) {
+            message += `📤 Файли передано в Signal!`;
+        } else {
+            message += `💡 Файли збережено на пристрій`;
+        }
+        
+        setTimeout(() => {
+            alert(message);
+        }, 500);
+        
+    } catch (error) {
+        console.error('Помилка:', error);
+        loading.style.display = 'none';
+        document.getElementById('progress').style.display = 'none';
+        alert('❌ Помилка: ' + error.message);
+    }
+}
+
+// ==================== ОСНОВНА ФУНКЦІЯ (ЗБЕРЕЖЕННЯ ТА ПОШИРЕННЯ) ====================
 
 async function saveAndShare() {
     const loading = document.getElementById('loading');
@@ -893,6 +1113,7 @@ async function saveAndShare() {
             });
             
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
+            
             const imgWidth = pdf.internal.pageSize.getWidth();
             const imgHeight = pdf.internal.pageSize.getHeight();
             
@@ -927,6 +1148,7 @@ async function saveAndShare() {
         
         const pdfBlob = pdf.output('blob');
         
+        // Збереження PDF
         const url = URL.createObjectURL(pdfBlob);
         const a = document.createElement('a');
         a.href = url;
@@ -938,13 +1160,13 @@ async function saveAndShare() {
             URL.revokeObjectURL(url);
         }, 100);
         
+        // Спроба поширення
         let shared = false;
-        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
         
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        if (navigator.share) {
             try {
                 await navigator.share({
-                    files: [file],
+                    files: [new File([pdfBlob], fileName, { type: 'application/pdf' })],
                     title: 'Рапорт',
                     text: ''
                 });
