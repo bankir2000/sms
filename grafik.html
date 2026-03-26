@@ -243,6 +243,8 @@ body {
 .on { background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: white; }
 .off { background: linear-gradient(135deg, #2d5016 0%, #4a7c2a 100%); color: white; }
 .patrol { background: linear-gradient(135deg, #8b0000 0%, #b22222 100%); color: white; font-weight: bold; }
+.mr2 { background: linear-gradient(135deg, #7a4a00 0%, #c47a00 100%); color: white; font-weight: bold; }
+.patrol-mr2 { background: linear-gradient(135deg, #8b0000 0%, #c47a00 100%); color: white; font-weight: bold; }
 
 /* Контейнери */
 .schedule-type {
@@ -553,6 +555,7 @@ hr {
   <span class="on">ЧЕРГУВАННЯ</span>
   <span class="off">ВІДПОЧИНОК</span>
   <span class="patrol" id="patrolLegend">ДОЗОР</span>
+  <span class="mr2" id="mr2Legend">🛠️ ТО MR2</span>
 </div>
 
 <div id="errorBox" class="error"></div>
@@ -591,6 +594,26 @@ hr {
   </div>
   <div class="info-text" id="patrolInfoText">
     Формат: "1/4" - кожні 4 дні, або "3,6,11" - числа місяця через кому
+  </div>
+
+  <hr style="margin: 18px 0;">
+
+  <div class="section-title" style="font-size:15px;">🛠️ ОБСЛУГОВУВАННЯ MR2 VIKTOR</div>
+
+  <div class="checkbox-container">
+    <input type="checkbox" id="noMR2" onchange="toggleMR2Fields()">
+    <label for="noMR2">Без ТО MR2 Viktor</label>
+  </div>
+
+  <label id="mr2DateLabel">Початкова дата обслуговування MR2 Viktor</label>
+  <input id="mr2Date" type="date" class="army-input">
+
+  <div class="patrol-period-container">
+    <label id="mr2PeriodLabel">Періодичність обслуговування MR2 Viktor</label>
+    <input id="mr2Period" type="text" class="army-input" placeholder="1/7 або 5,12,20">
+  </div>
+  <div class="info-text" id="mr2InfoText">
+    Формат: "1/7" - кожні 7 днів, або "5,12,20" - конкретні дні місяця через кому. ТО тільки 06:00–18:00.
   </div>
 </div>
 
@@ -743,7 +766,6 @@ function togglePatrolFields() {
   const patrolPeriodLabel = document.getElementById('patrolPeriodLabel');
   const patrolInfoText = document.getElementById('patrolInfoText');
   const patrolLegend = document.getElementById('patrolLegend');
-  const patrolPeriodContainer = document.querySelector('.patrol-period-container');
   
   if (noPatrol) {
     // Приховуємо поля дозору
@@ -754,6 +776,9 @@ function togglePatrolFields() {
     patrolTimeLabel.style.display = 'none';
     patrolPeriodLabel.style.display = 'none';
     patrolInfoText.style.display = 'none';
+    
+    // Зберігаємо значення перед очищенням
+    if (patrolPeriod.value) localStorage.setItem('patrolPeriodSaved', patrolPeriod.value);
     
     // Очищаємо значення
     patrolDate.value = '';
@@ -797,11 +822,48 @@ function togglePatrolFields() {
       patrolTime.value = '6';
       localStorage.setItem('patrolTime', '6');
     }
+
+    // Відновлюємо збережену періодичність
+    if (!patrolPeriod.value) {
+      const saved = localStorage.getItem('patrolPeriodSaved');
+      if (saved) patrolPeriod.value = saved;
+    }
   }
 }
 
-/* Збереження даних */
-const fields=['scheduleType','startTime','calcMonth','patrolDate','patrolTime','patrolPeriod','n1','d1','n2','d2','n3','d3'];
+/* Функція для перемикання полів ТО MR2 */
+function toggleMR2Fields() {
+  const noMR2 = document.getElementById('noMR2').checked;
+  const mr2Date = document.getElementById('mr2Date');
+  const mr2Period = document.getElementById('mr2Period');
+  const mr2DateLabel = document.getElementById('mr2DateLabel');
+  const mr2PeriodLabel = document.getElementById('mr2PeriodLabel');
+  const mr2InfoText = document.getElementById('mr2InfoText');
+  const mr2Legend = document.getElementById('mr2Legend');
+
+  if (noMR2) {
+    mr2Date.style.display = 'none';
+    mr2Period.style.display = 'none';
+    mr2DateLabel.style.display = 'none';
+    mr2PeriodLabel.style.display = 'none';
+    mr2InfoText.style.display = 'none';
+    mr2Legend.style.display = 'none';
+    mr2Date.value = '';
+    mr2Period.value = '';
+    localStorage.setItem('noMR2', 'true');
+  } else {
+    mr2Date.style.display = 'block';
+    mr2Period.style.display = 'block';
+    mr2DateLabel.style.display = 'block';
+    mr2PeriodLabel.style.display = 'block';
+    mr2InfoText.style.display = 'block';
+    mr2Legend.style.display = 'inline';
+    localStorage.setItem('noMR2', 'false');
+  }
+}
+
+
+const fields=['scheduleType','startTime','calcMonth','patrolDate','patrolTime','patrolPeriod','mr2Date','mr2Period','n1','d1','n2','d2','n3','d3'];
 fields.forEach(id=>{
   const el=document.getElementById(id);
   if(localStorage[id]) {
@@ -838,13 +900,28 @@ fields.forEach(id=>{
     document.getElementById('patrolLegend').style.display = 'inline';
   }
   
-  // Додаємо слухач для збереження стану
-  noPatrolCheckbox.addEventListener('change', function() {
-    localStorage.setItem('noPatrol', this.checked);
-  });
+  // Стан зберігається в togglePatrolFields()
+  noPatrolCheckbox.addEventListener('change', togglePatrolFields);
 })();
 
-/* Оновлення заголовка */
+/* Відновлення стану чекбокса "Без ТО MR2" */
+(function(){
+  const noMR2Checkbox = document.getElementById('noMR2');
+  const savedNoMR2 = localStorage.getItem('noMR2');
+
+  if (savedNoMR2 === 'true') {
+    noMR2Checkbox.checked = true;
+    toggleMR2Fields();
+  } else {
+    noMR2Checkbox.checked = false;
+    document.getElementById('mr2Legend').style.display = 'inline';
+  }
+
+  // Стан зберігається в toggleMR2Fields()
+  noMR2Checkbox.addEventListener('change', toggleMR2Fields);
+})();
+
+
 function updateScheduleTitle() {
   const type = document.getElementById('scheduleType').value;
   const title = document.getElementById('scheduleTitle');
@@ -877,193 +954,221 @@ function clearError(){
   document.getElementById('errorBox').textContent='';
 }
 
-/* Функція для форматування дат на мобільних */
-function formatDateForMobile(date) {
+const MS = 3600000; // 1 година в мілісекундах
+const STEP_MS = STEP * MS;
+
+/* Допоміжна функція: дата "YYYY-MM-DD" + година → мілісекунди (без DST)
+   Використовуємо UTC щоб уникнути зміщення при переході на літній/зимовий час */
+function dateHourToMs(dateStr, hour) {
+  // dateStr формат "YYYY-MM-DD"
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return Date.UTC(y, m - 1, d, hour, 0, 0, 0);
+}
+
+/* Допоміжна: рік+місяць(0-based)+день+година → мілісекунди UTC */
+function ymdhToMs(year, month, day, hour) {
+  return Date.UTC(year, month, day, hour, 0, 0, 0);
+}
+
+/* Форматування мілісекунд у рядок для відображення */
+function formatMs(ms) {
+  const d = new Date(ms);
   if (window.innerWidth <= 480) {
-    return date.toLocaleString('uk-UA', {
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
+    return d.toLocaleString('uk-UA', {
+      day: '2-digit', month: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'UTC'
     });
   }
-  return date.toLocaleString('uk-UA');
+  return d.toLocaleString('uk-UA', { timeZone: 'UTC' });
 }
 
 function build(){
   console.log('Функція build викликана');
-  
   clearError();
-  
-  // Отримуємо значення полів
-  const startTime = document.getElementById('startTime').value;
+
+  const startTime = parseInt(document.getElementById('startTime').value);
   const calcMonth = document.getElementById('calcMonth').value;
   const noPatrol = document.getElementById('noPatrol').checked;
   const patrolDate = document.getElementById('patrolDate').value;
-  const patrolTime = document.getElementById('patrolTime').value;
+  const patrolTime = parseInt(document.getElementById('patrolTime').value);
   const patrolPeriod = document.getElementById('patrolPeriod').value;
-  
-  console.log('Перевірка полів:', {startTime, calcMonth, noPatrol, patrolDate, patrolTime, patrolPeriod});
-  
-  // Перевірка обов'язкових полів
-  if(!startTime || !calcMonth) {
-    console.log('Не всі обов\'язкові поля заповнені');
-    return showError('❗ ЗАПОВНІТЬ ВСІ ОБОВʼЯЗКОВІ ПОЛЯ');
-  }
-  
-  // Якщо дозори ввімкнені, перевіряємо їх поля
-  if (!noPatrol && (!patrolDate || !patrolTime || !patrolPeriod)) {
-    console.log('Поля дозору не заповнені');
+  const noMR2 = document.getElementById('noMR2').checked;
+  const mr2Date = document.getElementById('mr2Date').value;
+  const mr2Period = document.getElementById('mr2Period').value;
+
+  if(!startTime || !calcMonth) return showError('❗ ЗАПОВНІТЬ ВСІ ОБОВʼЯЗКОВІ ПОЛЯ');
+  if (!noPatrol && (!patrolDate || !patrolTime || !patrolPeriod))
     return showError('❗ ЗАПОВНІТЬ ВСІ ПОЛЯ ДОЗОРУ АБО УВІМКНІТЬ "БЕЗ ДОЗОРІВ"');
-  }
+  if (!noMR2 && (!mr2Date || !mr2Period))
+    return showError('❗ ЗАПОВНІТЬ ПОЛЯ ТО MR2 VIKTOR АБО УВІМКНІТЬ "БЕЗ ТО MR2"');
 
   const scheduleTypeValue = document.getElementById('scheduleType').value;
   const schedule = SCHEDULE_TYPES[scheduleTypeValue];
   const SHIFT_ON = schedule.SHIFT_ON;
   const SHIFT_OFF = schedule.SHIFT_OFF;
-  
-  const CYCLE_LENGTH = SHIFT_ON + SHIFT_OFF; // загальна довжина циклу
+  const CYCLE_LENGTH = SHIFT_ON + SHIFT_OFF;
 
-  const [month,year]=calcMonth.split('-').map(Number);
-  const crew=[
-    {n:document.getElementById('n1').value || 'Член 1', d:new Date(document.getElementById('d1').value), h:0},
-    {n:document.getElementById('n2').value || 'Член 2', d:new Date(document.getElementById('d2').value), h:0},
-    {n:document.getElementById('n3').value || 'Член 3', d:new Date(document.getElementById('d3').value), h:0}
+  const [month, year] = calcMonth.split('-').map(Number);
+
+  // Дати екіпажу — всі в UTC мілісекундах
+  const crewRaw = [
+    {n: document.getElementById('n1').value || 'Член 1', ds: document.getElementById('d1').value},
+    {n: document.getElementById('n2').value || 'Член 2', ds: document.getElementById('d2').value},
+    {n: document.getElementById('n3').value || 'Член 3', ds: document.getElementById('d3').value},
   ];
-  
-  // Перевірка дат екіпажу
-  if (!crew[0].d.getTime() || !crew[1].d.getTime() || !crew[2].d.getTime()) {
+  if (!crewRaw[0].ds || !crewRaw[1].ds || !crewRaw[2].ds)
     return showError('❗ ВВЕДІТЬ КОРЕКТНІ ДАТИ ПОЧАТКУ ЧЕРГУВАННЯ ДЛЯ ВСІХ ЧЛЕНІВ ЕКІПАЖУ');
-  }
-  
-  crew.forEach(c=>c.d.setHours(startTime,0,0,0));
 
-  const mStart=new Date(year,month,1,startTime);
-  const mEnd=new Date(year,month+1,1,startTime);
+  const crew = crewRaw.map(c => ({
+    n: c.n,
+    dMs: dateHourToMs(c.ds, startTime),
+    h: 0
+  }));
 
-  // Змінні для дозорів (використовуються тільки якщо noPatrol = false)
-  let pStart = null;
+  // Початок і кінець місяця в UTC мілісекундах
+  const mStartMs = ymdhToMs(year, month, 1, startTime);
+  const mEndMs   = ymdhToMs(year, month + 1, 1, startTime);
+
+  // --- ДОЗОРИ ---
+  let pStartMs = 0;
   let isDayList = false;
-  let patrolDays = [];
-  let patrolInterval = 0;
-  let patrolDates = [];
-  
-  // Парсинг дозорів тільки якщо вони ввімкнені
-  if (!noPatrol) {
-    pStart = new Date(patrolDate);
-    pStart.setHours(patrolTime,0,0,0);
+  let patrolDates = []; // масив мілісекунд початку дозору
+  let patrolInterval = 0; // в мілісекундах
 
-    // Парсинг періодичності дозорів
+  if (!noPatrol) {
+    pStartMs = dateHourToMs(patrolDate, patrolTime);
     const patrolPeriodValue = patrolPeriod.trim();
-    
-    console.log('Парсинг періодичності:', patrolPeriodValue);
-    
+
     if (patrolPeriodValue.includes('/')) {
-      // Формат "1/4" - кожні 4 дні
       const parts = patrolPeriodValue.split('/');
-      if (parts.length !== 2) {
-        return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
-      }
-      const num = parseInt(parts[0]);
+      if (parts.length !== 2) return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДОЗОРУ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
       const denom = parseInt(parts[1]);
-      if (isNaN(num) || isNaN(denom) || denom <= 0) {
-        return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
-      }
-      // Інтервал в годинах: кожні denom днів
-      patrolInterval = denom * 24;
-      console.log('Інтервал дозорів (годин):', patrolInterval);
+      if (isNaN(denom) || denom <= 0) return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДОЗОРУ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
+      patrolInterval = denom * 24 * MS;
     } else if (patrolPeriodValue.includes(',') || !isNaN(parseInt(patrolPeriodValue))) {
-      // Формат "3,6,11" або просто число
       isDayList = true;
       const days = patrolPeriodValue.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
-      if (days.length === 0) {
-        return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДНІВ. ВВЕДІТЬ ЧИСЛА ВІД 1 ДО 31 ЧЕРЕЗ КОМУ');
-      }
-      patrolDays = days;
-      console.log('Дні дозорів:', patrolDays);
-    } else {
-      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ПЕРІОДИЧНОСТІ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
-    }
-
-    // Дні дозорів для формату днів місяця
-    if (isDayList) {
-      // Створюємо дати дозорів для кожного дня в обраному місяці
-      const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-      patrolDays.forEach(day => {
-        if (day <= lastDayOfMonth) {
-          const patrolStart = new Date(year, month, day, pStart.getHours(), 0, 0);
-          patrolDates.push(patrolStart);
-        }
+      if (days.length === 0) return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДНІВ ДОЗОРУ. ВВЕДІТЬ ЧИСЛА ВІД 1 ДО 31 ЧЕРЕЗ КОМУ');
+      const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      days.forEach(day => {
+        if (day <= lastDay) patrolDates.push(ymdhToMs(year, month, day, patrolTime));
       });
-      console.log('Дата дозорів для місяця:', patrolDates);
+    } else {
+      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДОЗОРУ. ВИКОРИСТОВУЙТЕ "1/4" АБО "3,6,11"');
     }
   }
 
-  let html='<div class="table-wrapper"><table><tr><th>Період (12 год)</th>';
-  crew.forEach(c=>html+=`<th>${c.n}</th>`);
-  html+='</tr>';
+  // --- ТО MR2 ---
+  let mr2StartMs = 0;
+  let isMR2DayList = false;
+  let mr2Dates = [];
+  let mr2Interval = 0;
 
-  // Розрахунок графіку
-  for(let t=new Date(mStart);t<mEnd;t.setHours(t.getHours()+STEP)){
-    let to=new Date(t.getTime() + STEP * 3600000);
-    const dateFrom = formatDateForMobile(t);
-    const dateTo = formatDateForMobile(to);
-    html+=`<tr><td>${dateFrom}<br>—<br>${dateTo}</td>`;
+  if (!noMR2) {
+    mr2StartMs = dateHourToMs(mr2Date, 6); // ТО завжди о 06:00
+    const mr2PeriodValue = mr2Period.trim();
 
-    // Перевірка чи є патруль в цей період (тільки якщо дозори ввімкнені)
+    if (mr2PeriodValue.includes('/')) {
+      const parts = mr2PeriodValue.split('/');
+      if (parts.length !== 2) return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ MR2. ВИКОРИСТОВУЙТЕ "1/7" АБО "5,12,20"');
+      const denom = parseInt(parts[1]);
+      if (isNaN(denom) || denom <= 0) return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ MR2. ВИКОРИСТОВУЙТЕ "1/7" АБО "5,12,20"');
+      mr2Interval = denom * 24 * MS;
+    } else if (mr2PeriodValue.includes(',') || !isNaN(parseInt(mr2PeriodValue))) {
+      isMR2DayList = true;
+      const days = mr2PeriodValue.split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d) && d >= 1 && d <= 31);
+      if (days.length === 0) return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ ДНІВ MR2. ВВЕДІТЬ ЧИСЛА ВІД 1 ДО 31 ЧЕРЕЗ КОМУ');
+      const lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      days.forEach(day => {
+        if (day <= lastDay) mr2Dates.push(ymdhToMs(year, month, day, 6));
+      });
+    } else {
+      return showError('❗ НЕПРАВИЛЬНИЙ ФОРМАТ MR2. ВИКОРИСТОВУЙТЕ "1/7" АБО "5,12,20"');
+    }
+  }
+
+  let html = '<div class="table-wrapper"><table><tr><th>Період (12 год)</th>';
+  crew.forEach(c => html += `<th>${c.n}</th>`);
+  html += '</tr>';
+
+  // Основний цикл — крок STEP_MS, без залежності від локального часу
+  for (let tMs = mStartMs; tMs < mEndMs; tMs += STEP_MS) {
+    const toMs = tMs + STEP_MS;
+    const dateFrom = formatMs(tMs);
+    const dateTo   = formatMs(toMs);
+
+    // Перевірка дозору
     let isPatrol = false;
-    
     if (!noPatrol) {
       if (isDayList) {
-        // Перевірка за днями місяця
-        for (const patrolStart of patrolDates) {
-          const patrolEnd = new Date(patrolStart.getTime() + 24 * 3600000);
-          // Перевіряємо перетин періоду (t, to) з дозором (patrolStart, patrolEnd)
-          if (t < patrolEnd && to > patrolStart) {
-            isPatrol = true;
-            break;
-          }
+        for (const ps of patrolDates) {
+          if (tMs < ps + 24 * MS && toMs > ps) { isPatrol = true; break; }
         }
       } else {
-        // Перевірка за інтервалом (формат "1/4")
-        // Розраховуємо скільки годин пройшло від початку першого дозору
-        const hoursFromPatrolStart = (t - pStart) / 3600000;
-        
-        // Якщо це майбутній дозор або поточний
-        if (hoursFromPatrolStart >= 0) {
-          // Визначаємо номер циклу
-          const cycleNumber = Math.floor(hoursFromPatrolStart / patrolInterval);
-          const startOfCurrentCycle = new Date(pStart.getTime() + cycleNumber * patrolInterval * 3600000);
-          const endOfCurrentCycle = new Date(startOfCurrentCycle.getTime() + 24 * 3600000); // Дозор триває 24 години
-          
-          // Перевіряємо чи поточний період перетинається з дозором
-          if (t < endOfCurrentCycle && to > startOfCurrentCycle) {
-            isPatrol = true;
-          }
+        const elapsed = tMs - pStartMs;
+        if (elapsed >= 0) {
+          const cycleN = Math.floor(elapsed / patrolInterval);
+          const cycleStart = pStartMs + cycleN * patrolInterval;
+          if (tMs < cycleStart + 24 * MS && toMs > cycleStart) isPatrol = true;
         }
       }
     }
 
-    crew.forEach(c=>{
-      // Розрахунок позиції в циклі чергування
-      const hoursFromStart = (t - c.d) / 3600000;
-      const cyclePosition = ((hoursFromStart % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH);
-      
-      if(cyclePosition < SHIFT_ON){
-        c.h += STEP;
-        html+=isPatrol?'<td class="patrol">ДОЗОР</td>':'<td class="on">Чергування</td>';
+    // Перевірка ТО MR2 — тільки блок 06:00–18:00 UTC
+    let isMR2 = false;
+    const tUTCHour = new Date(tMs).getUTCHours();
+    const isDay06to18 = (tUTCHour >= 6 && tUTCHour < 18);
+
+    if (!noMR2 && isDay06to18) {
+      if (isMR2DayList) {
+        for (const ms of mr2Dates) {
+          if (tMs < ms + 12 * MS && toMs > ms) { isMR2 = true; break; }
+        }
       } else {
-        html+='<td class="off">Відпочинок</td>';
+        const elapsed = tMs - mr2StartMs;
+        if (elapsed >= 0) {
+          const cycleN = Math.floor(elapsed / mr2Interval);
+          const cycleStart = mr2StartMs + cycleN * mr2Interval;
+          if (tMs < cycleStart + 12 * MS && toMs > cycleStart) isMR2 = true;
+        }
+      }
+    }
+
+    html += `<tr><td>${dateFrom}<br>—<br>${dateTo}</td>`;
+
+    crew.forEach(c => {
+      // Розрахунок позиції в циклі — в годинах (ділимо мілісекунди на MS)
+      const hoursFromStart = (tMs - c.dMs) / MS;
+      const cyclePosition = ((hoursFromStart % CYCLE_LENGTH + CYCLE_LENGTH) % CYCLE_LENGTH);
+
+      if (cyclePosition < SHIFT_ON) {
+        c.h += STEP;
+        if (isPatrol && isMR2) {
+          html += '<td class="patrol-mr2">ДОЗОР<br>🛠️ ТО MR2</td>';
+        } else if (isPatrol) {
+          html += '<td class="patrol">ДОЗОР</td>';
+        } else if (isMR2) {
+          html += '<td class="mr2">Чергування<br>🛠️ ТО MR2</td>';
+        } else {
+          html += '<td class="on">Чергування</td>';
+        }
+      } else {
+        if (isMR2) {
+          html += '<td class="off">Відпочинок<br><span style="font-size:11px;opacity:0.8;">🛠️ ТО MR2</span></td>';
+        } else {
+          html += '<td class="off">Відпочинок</td>';
+        }
       }
     });
-    html+='</tr>';
+    html += '</tr>';
   }
 
-  html+='<tr><th>Разом годин</th>';
-  crew.forEach(c=>html+=`<th>${c.h}</th>`);
-  html+='</tr></table></div>';
+  html += '<tr><th>Разом годин</th>';
+  crew.forEach(c => html += `<th>${c.h}</th>`);
+  html += '</tr></table></div>';
 
-  console.log('Таблиця побудована, кількість рядків:', (mEnd - mStart) / (STEP * 3600000));
+  console.log('Таблиця побудована, кількість рядків:', (mEndMs - mStartMs) / STEP_MS);
   
   const container = document.getElementById('tableContainer');
   container.innerHTML = html;
@@ -1103,8 +1208,7 @@ async function shareTable(){
       showError('✓ Таблицю скопійовано в буфер обміну');
     } else {
       // Fallback для старих браузерів
-      const blob = new Blob([file], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(file);
       const a = document.createElement('a');
       a.href = url;
       a.download = file.name;
