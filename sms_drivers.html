@@ -260,9 +260,9 @@ function calculate() {
         return;
     }
 
-    var highwayFuel = Math.round((highwayDistance / 100) * 15.9 * 1.10);
-    var streetFuel = Math.round((streetDistance / 100) * 15.9 * 0.85);
-    var offroadFuel = Math.round((offroadDistance / 100) * 15.9 * 1.30);
+    var highwayFuel = Math.round((highwayDistance / 100) * 20.7 * 1.10);
+    var streetFuel = Math.round((streetDistance / 100) * 20.7 * 0.85);
+    var offroadFuel = Math.round((offroadDistance / 100) * 20.7 * 1.30);
     var totalFuel = highwayFuel + streetFuel + offroadFuel;
 
     var remainingFuel = previousFuel - totalFuel + fuelReceived;
