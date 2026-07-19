@@ -515,6 +515,8 @@ function calculate() {
 // Зберігає розрахований запис у "базу" СМС за днями.
 // Якщо за цей день вже є запис (тобто СМС за день відправляли раніше) —
 // він перезаписується останнім (останнє повідомлення за день "виграє").
+var SMS_HISTORY_DAYS = 20;
+
 function saveSmsRecord(record) {
     if (!record) return;
     var records = {};
@@ -524,6 +526,15 @@ function saveSmsRecord(record) {
         records = {};
     }
     records[record.date] = record;
+
+    // Тримаємо в пам'яті лише 20 останніх календарних дат.
+    // Якщо дат більше — видаляємо найранішу (найстарішу).
+    var dates = Object.keys(records).sort();
+    while (dates.length > SMS_HISTORY_DAYS) {
+        var oldest = dates.shift();
+        delete records[oldest];
+    }
+
     localStorage.setItem('smsRecords', JSON.stringify(records));
 }
 
