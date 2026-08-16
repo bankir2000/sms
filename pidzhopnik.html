@@ -41,7 +41,8 @@
 
     .field-row input[type="text"],
     .field-row input[type="number"],
-    .field-row input[type="date"] {
+    .field-row input[type="date"],
+    .field-row select {
         flex: 1;
         max-width: 50%;
         padding: 8px;
@@ -101,7 +102,8 @@
             font-size: 16px;
             min-width: 100px;
         }
-        .field-row input {
+        .field-row input,
+        .field-row select {
             font-size: 16px;
             max-width: 50%;
             padding: 8px;
@@ -269,8 +271,20 @@
 </div>
 
 <div class="field-row">
-    <label id="crewLabel">👥 Номер екіпажу</label>
-    <input type="text" id="crewNumber" placeholder="Введіть номер екіпажу">
+    <label id="crewLabel">🚚 Марка ТЗ</label>
+    <select id="crewNumber">
+        <option value="" disabled selected>Оберіть марку ТЗ</option>
+        <option value="Toyota Land Cruiser GRJ79L-TJMRKV">Toyota Land Cruiser GRJ79L-TJMRKV</option>
+        <option value="SUZUKI GRAND VITARA, JA420WD">SUZUKI GRAND VITARA, JA420WD</option>
+        <option value="УАЗ 390945-360">УАЗ 390945-360</option>
+        <option value="DAF 4442">DAF 4442</option>
+        <option value="DONGFENG RICH 6 ZN1035UCN5">DONGFENG RICH 6 ZN1035UCN5</option>
+        <option value="MITSUBISHI L200">MITSUBISHI L200</option>
+        <option value="Nissan Navara KKG802">Nissan Navara KKG802</option>
+        <option value="MAZDA B 2500 FL">MAZDA B 2500 FL</option>
+        <option value="MITSUBISHI L200 K74T">MITSUBISHI L200 K74T</option>
+        <option value="HMMWV M1097">HMMWV M1097</option>
+    </select>
 </div>
 
 <div class="field-row">
