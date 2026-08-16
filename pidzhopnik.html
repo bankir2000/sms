@@ -318,6 +318,11 @@
 </div>
 
 <div class="field-row">
+    <label id="cityLabel">🏙️ Місто +15%</label>
+    <input type="number" id="cityDistance" placeholder="км" value="0">
+</div>
+
+<div class="field-row">
     <label id="offroadLabel">🌾 Бездоріжжя +30%</label>
     <input type="number" id="offroadDistance" placeholder="км">
 </div>
@@ -420,6 +425,9 @@ if(localStorage.getItem('fuelReceived')) {
 if(localStorage.getItem('highwayDistance=0')) {
     document.getElementById('highwayDistance').value = localStorage.getItem('highwayDistance');
 }
+if(localStorage.getItem('cityDistance')) {
+    document.getElementById('cityDistance').value = localStorage.getItem('cityDistance');
+}
 // if(localStorage.getItem('streetDistance')) {
 //    document.getElementById('streetDistance').value = localStorage.getItem('streetDistance');
 //}
@@ -436,8 +444,64 @@ const fields = [
     {id: 'endSpeedometer', label: 'endLabel'},
     {id: 'highwayDistance', label: 'highwayLabel'},
     {id: 'streetDistance', label: 'streetLabel'},
+    {id: 'cityDistance', label: 'cityLabel'},
     {id: 'offroadDistance', label: 'offroadLabel'}
 ];
+
+// Норма витрати пального (л/100км) за маркою ТЗ - третя колонка довідника.
+const FUEL_NORMS = {
+    "Toyota Land Cruiser GRJ79L-TJMRKV": 20.70,
+    "SUZUKI GRAND VITARA, JA420WD": 9.50,
+    "УАЗ 390945-360": 16.50,
+    "DAF 4442": 28.00,
+    "DONGFENG RICH 6 ZN1035UCN5": 12.60,
+    "MITSUBISHI L200": 12.50,
+    "Nissan Navara KKG802": 12.00,
+    "MAZDA B 2500 FL": 12.00,
+    "MITSUBISHI L200 K74T": 12.50,
+    "HMMWV M1097": 27.00
+};
+
+// Код марки ТЗ (перша колонка довідника) - у СМС передаємо код замість
+// повної назви, щоб зменшити довжину повідомлення.
+const CREW_CODES = {
+    "Toyota Land Cruiser GRJ79L-TJMRKV": 1000,
+    "SUZUKI GRAND VITARA, JA420WD": 1001,
+    "УАЗ 390945-360": 1002,
+    "DAF 4442": 1003,
+    "DONGFENG RICH 6 ZN1035UCN5": 1004,
+    "MITSUBISHI L200": 1005,
+    "Nissan Navara KKG802": 1006,
+    "MAZDA B 2500 FL": 1007,
+    "MITSUBISHI L200 K74T": 1008,
+    "HMMWV M1097": 1009
+};
+
+// Повертає код марки для СМС. Якщо марки немає в довіднику (наприклад,
+// список довідника оновили не всюди одночасно) - повертає повну назву
+// як запасний варіант, щоб СМС все одно сформувалась, а не зламалась.
+function getCrewCode(crewName) {
+    if (Object.prototype.hasOwnProperty.call(CREW_CODES, crewName)) {
+        return CREW_CODES[crewName];
+    }
+    return crewName;
+}
+
+// Повертає норму витрати для обраної марки ТЗ. Якщо марку не обрано
+// або її немає в довіднику - повертає null (виклик, що це перевіряє,
+// має сам показати помилку користувачу, а не рахувати з хибним числом).
+function getFuelNorm() {
+    var crew = document.getElementById('crewNumber').value;
+    if (Object.prototype.hasOwnProperty.call(FUEL_NORMS, crew)) {
+        return FUEL_NORMS[crew];
+    }
+    return null;
+}
+
+// Останній обраховане значення норми - потрібне функціям "Дорожнього
+// листа", які формують текст ПІСЛЯ того, як марку вже обрано в
+// момент виклику calculate().
+var lastFuelNorm = null;
 
 // Останній розрахований запис (зберігається у localStorage лише при
 // натисканні "Поширити" або "Скопіювати" — тобто коли СМС реально відправляється)
@@ -478,25 +542,37 @@ function calculate() {
     var endSpeedometer = parseFloat(document.getElementById('endSpeedometer').value);
     var highwayDistance = parseFloat(document.getElementById('highwayDistance').value);
     var streetDistance = parseFloat(document.getElementById('streetDistance').value);
+    var cityDistance = parseFloat(document.getElementById('cityDistance').value);
     var offroadDistance = parseFloat(document.getElementById('offroadDistance').value);
 
+    var fuelNorm = getFuelNorm();
+    if (fuelNorm === null) {
+        alert('Оберіть марку ТЗ зі списку - для неї немає норми витрати пального');
+        return;
+    }
+
     var difference = endSpeedometer - startSpeedometer;
-    var totalDistance = highwayDistance + streetDistance + offroadDistance;
+    var totalDistance = highwayDistance + streetDistance + cityDistance + offroadDistance;
 
     if (difference !== totalDistance) {
         alert('Різниця спідометра не відповідає сумі відстаней доріг');
         return;
     }
 
-    var highwayFuel = Math.round((highwayDistance / 100) * 20.7 * 1.10);
-    var streetFuel = Math.round((streetDistance / 100) * 20.7 * 0.85);
-    var offroadFuel = Math.round((offroadDistance / 100) * 20.7 * 1.30);
-    var totalFuel = highwayFuel + streetFuel + offroadFuel;
+    var highwayFuel = Math.round((highwayDistance / 100) * fuelNorm * 1.10);
+    var streetFuel = Math.round((streetDistance / 100) * fuelNorm * 0.85);
+    var cityFuel = Math.round((cityDistance / 100) * fuelNorm * 1.15);
+    var offroadFuel = Math.round((offroadDistance / 100) * fuelNorm * 1.30);
+    var totalFuel = highwayFuel + streetFuel + cityFuel + offroadFuel;
 
     var remainingFuel = previousFuel - totalFuel + fuelReceived;
 
+    lastFuelNorm = fuelNorm;
+
+    var crewCode = getCrewCode(crewNumber);
+
     var formattedDate = formatDate(date);
-    var resultv = formattedDate + "_№" + crewNumber + "_" + previousFuel + "л_заправка " + fuelReceived + "л_" + endSpeedometer + "_" + difference + "км_колона " + highwayDistance + "км_траса " + streetDistance + "км_бездоріжжя " + offroadDistance + "км_" + totalFuel + "л_" + remainingFuel + "л";
+    var resultv = formattedDate + "_№" + crewCode + "_" + previousFuel + "л_заправка " + fuelReceived + "л_" + endSpeedometer + "_" + difference + "км_колона " + highwayDistance + "км_траса " + streetDistance + "км_місто " + cityDistance + "км_бездоріжжя " + offroadDistance + "км_" + totalFuel + "л_" + remainingFuel + "л";
 
     document.getElementById('resultv').innerText = resultv;
 
@@ -511,10 +587,12 @@ function calculate() {
         endSpeedometer: endSpeedometer,
         highwayDistance: highwayDistance,
         streetDistance: streetDistance,
+        cityDistance: cityDistance,
         offroadDistance: offroadDistance,
         totalFuel: totalFuel,
         remainingFuel: remainingFuel,
-        difference: difference
+        difference: difference,
+        fuelNorm: fuelNorm
     };
 
     // Збереження полів для автозаповнення наступного разу (як і раніше)
@@ -523,6 +601,7 @@ function calculate() {
     localStorage.setItem('startSpeedometer', endSpeedometer);
     localStorage.setItem('highwayDistance', highwayDistance);
     localStorage.setItem('streetDistance', streetDistance);
+    localStorage.setItem('cityDistance', cityDistance);
     localStorage.setItem('offroadDistance', offroadDistance);
 }
 
@@ -629,10 +708,15 @@ function closeWaybill() {
 // Формує формулу витрат пального у стилі "20,7×0,15-15%"
 function fuelFormulaLines(rec) {
     var lines = [];
+    // старі записи (до появи довідника марок) не мають fuelNorm -
+    // для них лишаємо попередню поведінку (20.7)
+    var norm = (typeof rec.fuelNorm === 'number' && !isNaN(rec.fuelNorm)) ? rec.fuelNorm : 20.7;
+    var normStr = norm.toFixed(1).replace('.', ',');
     function frac(km) { return (km / 100).toFixed(2).replace('.', ','); }
-    if (rec.streetDistance > 0) lines.push('20,7×' + frac(rec.streetDistance) + '-15%');
-    if (rec.offroadDistance > 0) lines.push('20,7×' + frac(rec.offroadDistance) + '+30%');
-    if (rec.highwayDistance > 0) lines.push('20,7×' + frac(rec.highwayDistance) + '+10%');
+    if (rec.streetDistance > 0) lines.push(normStr + '×' + frac(rec.streetDistance) + '-15%');
+    if (rec.cityDistance > 0) lines.push(normStr + '×' + frac(rec.cityDistance) + '+15%');
+    if (rec.offroadDistance > 0) lines.push(normStr + '×' + frac(rec.offroadDistance) + '+30%');
+    if (rec.highwayDistance > 0) lines.push(normStr + '×' + frac(rec.highwayDistance) + '+10%');
     return lines.join('<br>');
 }
 
@@ -640,6 +724,7 @@ function fuelFormulaLines(rec) {
 function routeTypeText(rec) {
     var lines = [];
     if (rec.streetDistance > 0) lines.push('траса – 15%');
+    if (rec.cityDistance > 0) lines.push('місто +15%');
     if (rec.highwayDistance > 0) lines.push('колона +10%');
     if (rec.offroadDistance > 0) lines.push('пол. дорога +30%');
     return lines.length ? lines.join('<br>') : '—';
@@ -683,7 +768,7 @@ function renderWaybill() {
         var rec = records[dateStr];
         var totalKm = (typeof rec.difference === 'number' && !isNaN(rec.difference))
             ? rec.difference
-            : (rec.highwayDistance + rec.streetDistance + rec.offroadDistance);
+            : (rec.highwayDistance + rec.streetDistance + (rec.cityDistance || 0) + rec.offroadDistance);
 
         sumTotal += totalKm;
         sumFuel += rec.totalFuel;
