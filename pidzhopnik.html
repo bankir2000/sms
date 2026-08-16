@@ -274,7 +274,6 @@
     <label id="crewLabel">🚚 Марка ТЗ</label>
     <select id="crewNumber">
         <option value="" disabled selected>Оберіть марку ТЗ</option>
-        <option value="Toyota Land Cruiser GRJ79L-TJMRKV">Toyota Land Cruiser GRJ79L-TJMRKV</option>
         <option value="SUZUKI GRAND VITARA, JA420WD">SUZUKI GRAND VITARA, JA420WD</option>
         <option value="УАЗ 390945-360">УАЗ 390945-360</option>
         <option value="DAF 4442">DAF 4442</option>
@@ -450,7 +449,6 @@ const fields = [
 
 // Норма витрати пального (л/100км) за маркою ТЗ - третя колонка довідника.
 const FUEL_NORMS = {
-    "Toyota Land Cruiser GRJ79L-TJMRKV": 20.70,
     "SUZUKI GRAND VITARA, JA420WD": 9.50,
     "УАЗ 390945-360": 16.50,
     "DAF 4442": 28.00,
@@ -465,7 +463,6 @@ const FUEL_NORMS = {
 // Код марки ТЗ (перша колонка довідника) - у СМС передаємо код замість
 // повної назви, щоб зменшити довжину повідомлення.
 const CREW_CODES = {
-    "Toyota Land Cruiser GRJ79L-TJMRKV": 1000,
     "SUZUKI GRAND VITARA, JA420WD": 1001,
     "УАЗ 390945-360": 1002,
     "DAF 4442": 1003,
