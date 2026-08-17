@@ -62,6 +62,83 @@
         margin-left: 4px;
     }
 
+    /* ---- Перемикач вкладок ---- */
+    .tab-switch {
+        display: flex;
+        gap: 8px;
+        margin: 0 auto 15px;
+        max-width: 600px;
+        padding: 0 15px;
+    }
+    .tab-switch button {
+        flex: 1;
+        padding: 10px;
+        font-size: 15px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        color: #b8d2a3;
+        background: #2f3e2f;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+    }
+    .tab-switch button.active {
+        color: #fff;
+        background: linear-gradient(145deg, #4a5b3a, #7fa34a);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ---- Рядок "км + %" на вкладці Літри ---- */
+    .liters-km {
+        max-width: 32% !important;
+    }
+    .liters-col-headers {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+        padding: 0 12px;
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: #8fa87a;
+    }
+    .liters-col-headers span {
+        text-align: center;
+    }
+    .liters-col-headers .lch-km {
+        width: 32%;
+    }
+    .liters-col-headers .lch-pct {
+        width: 20%;
+    }
+    .liters-pct-hint {
+        font-size: 10px;
+        color: #7a9268;
+        display: block;
+        text-align: center;
+        margin-top: 2px;
+    }
+    .liters-pct {
+        max-width: 20% !important;
+        margin-left: 6px;
+    }
+    .liters-readonly {
+        flex: 1;
+        max-width: 50%;
+        padding: 8px;
+        font-size: 18px;
+        color: #d1e8b2;
+        text-align: right;
+    }
+    #litersPctWarning {
+        text-align: center;
+        font-size: 14px;
+        color: #e0c26a;
+        margin: -4px 0 12px;
+        min-height: 18px;
+    }
+    #litersPctWarning.ok { color: #8fbf6a; }
+    #litersPctWarning.bad { color: #d16a6a; }
+
     .buttons {
         display: flex;
         justify-content: space-between;
@@ -264,6 +341,14 @@
 <body>
 <div class="calculator">
 <h1 style="text-align:center; color:#b8d2a3;">Калькулятор витрат палива</h1>
+</div>
+
+<div class="tab-switch">
+    <button id="tabBtnFuel" class="active" onclick="switchTab('fuel')">⛽ СМС показників</button>
+    <button id="tabBtnLiters" onclick="switchTab('liters')">🧮 Літри → км</button>
+</div>
+
+<div class="calculator tab-content active" id="tab-fuel">
 
 <div class="field-row">
     <label>📅 Виберіть дату</label>
@@ -272,7 +357,7 @@
 
 <div class="field-row">
     <label id="crewLabel">🚚 Марка ТЗ</label>
-    <select id="crewNumber">
+    <select id="crewNumber" onchange="onCrewChangedForLiters()">
         <option value="" disabled selected>Оберіть марку ТЗ</option>
         <option value="SUZUKI GRAND VITARA, JA420WD">SUZUKI GRAND VITARA, JA420WD</option>
         <option value="УАЗ 390945-360">УАЗ 390945-360</option>
@@ -298,7 +383,7 @@
 
 <div class="field-row">
     <label id="startLabel">🔰 Спідометр попередній</label>
-    <input type="number" id="startSpeedometer" placeholder="км">
+    <input type="number" id="startSpeedometer" placeholder="км" oninput="refreshLitersEndSpeedometer()">
 </div>
 
 <div class="field-row">
@@ -337,6 +422,67 @@
 <p id="resultv"></p>
 
 </div>
+<!-- кінець tab-fuel -->
+
+<div class="calculator tab-content" id="tab-liters">
+
+<div class="field-row">
+    <label>🚚 Марка ТЗ</label>
+    <div id="litersCrewDisplay" class="liters-readonly">—</div>
+</div>
+
+<div class="field-row">
+    <label id="desiredFuelLabel">🎯 Введіть бажані літри, л</label>
+    <input type="number" id="desiredFuel" placeholder="л" value="0" oninput="onDesiredFuelChange()">
+</div>
+
+<p style="font-size:13px; color:#8fa87a; text-align:center; margin:0 0 10px;">
+    "% дороги" — яка частка бажаних літрів припадає на цей тип дороги (усі 4 % мають давати разом 100%)
+</p>
+
+<div class="liters-col-headers">
+    <span class="lch-km">км</span>
+    <span class="lch-pct">% дороги</span>
+</div>
+
+<div class="field-row">
+    <label>🚗 Колона +10%</label>
+    <input type="number" class="liters-km" id="litersHighwayKm" placeholder="км" value="0" oninput="onLitersKmChange(0)">
+    <input type="number" class="liters-pct" id="litersHighwayPct" placeholder="%" value="0" oninput="onLitersPctChange(0)">
+</div>
+
+<div class="field-row">
+    <label>🛣️ Траса -15%</label>
+    <input type="number" class="liters-km" id="litersStreetKm" placeholder="км" value="0" oninput="onLitersKmChange(1)">
+    <input type="number" class="liters-pct" id="litersStreetPct" placeholder="%" value="10" oninput="onLitersPctChange(1)">
+</div>
+
+<div class="field-row">
+    <label>🏙️ Місто +15%</label>
+    <input type="number" class="liters-km" id="litersCityKm" placeholder="км" value="0" oninput="onLitersKmChange(2)">
+    <input type="number" class="liters-pct" id="litersCityPct" placeholder="%" value="20" oninput="onLitersPctChange(2)">
+</div>
+
+<div class="field-row">
+    <label>🌾 Бездоріжжя +30%</label>
+    <input type="number" class="liters-km" id="litersOffroadKm" placeholder="км" value="0" oninput="onLitersKmChange(3)">
+    <input type="number" class="liters-pct" id="litersOffroadPct" placeholder="%" value="70" oninput="onLitersPctChange(3)">
+</div>
+
+<div id="litersPctWarning"></div>
+
+<div class="field-row">
+    <label>🏁 Кінцевий спідометр (розрахунок)</label>
+    <div id="litersEndSpeedometer" class="liters-readonly">—</div>
+</div>
+
+<div class="buttons">
+    <button onclick="confirmLiters()">✅ Згоден</button>
+    <button onclick="switchTab('fuel')">↩️ Назад</button>
+</div>
+
+</div>
+<!-- кінець tab-liters -->
 
 <!-- ==================== Модальне вікно "Дорожній лист" ==================== -->
 <div class="modal-overlay" id="waybillOverlay">
@@ -493,6 +639,189 @@ function getFuelNorm() {
         return FUEL_NORMS[crew];
     }
     return null;
+}
+
+// =====================================================================
+//  Вкладка "Літри → км" - зворотній розрахунок: скільки км кожного типу
+//  дороги дає бажану витрату пального, з розподілом по % використання.
+// =====================================================================
+
+// Коефіцієнти по типам доріг - ті самі, що і в calculate().
+const LITERS_ROAD_TYPES = [
+    {km: 'litersHighwayKm', pct: 'litersHighwayPct', coef: 1.10},
+    {km: 'litersStreetKm', pct: 'litersStreetPct', coef: 0.85},
+    {km: 'litersCityKm', pct: 'litersCityPct', coef: 1.15},
+    {km: 'litersOffroadKm', pct: 'litersOffroadPct', coef: 1.30}
+];
+
+// Перемикання вкладок
+function switchTab(name) {
+    document.getElementById('tab-fuel').classList.toggle('active', name === 'fuel');
+    document.getElementById('tab-liters').classList.toggle('active', name === 'liters');
+    document.getElementById('tabBtnFuel').classList.toggle('active', name === 'fuel');
+    document.getElementById('tabBtnLiters').classList.toggle('active', name === 'liters');
+    if (name === 'liters') {
+        refreshLitersCrewDisplay();
+        refreshLitersEndSpeedometer();
+        checkLitersPctSum();
+    }
+}
+
+// Марка ТЗ на вкладці Літри - лише показ, значення береться з першої вкладки
+function refreshLitersCrewDisplay() {
+    var crew = document.getElementById('crewNumber').value;
+    document.getElementById('litersCrewDisplay').innerText = crew || '— спочатку оберіть на вкладці "СМС показників" —';
+}
+
+// Викликається при зміні марки ТЗ на першій вкладці - оновлює показ на
+// вкладці Літри і перераховує км під нову норму витрати (% лишається як був)
+function onCrewChangedForLiters() {
+    refreshLitersCrewDisplay();
+    var fuelNorm = getFuelNorm();
+    var desiredFuel = parseFloat(document.getElementById('desiredFuel').value) || 0;
+    if (fuelNorm !== null) {
+        LITERS_ROAD_TYPES.forEach(function(type) {
+            recalcKmFromPct(type, fuelNorm, desiredFuel);
+        });
+    }
+    refreshLitersEndSpeedometer();
+}
+
+// км -> літри для типу дороги (та сама формула, що й у calculate())
+function litersFromKm(km, fuelNorm, coef) {
+    return Math.round((km / 100) * fuelNorm * coef);
+}
+
+// літри -> км для типу дороги (зворотна формула, без округлення - для
+// плавного перерахунку; саме поле км показує ціле число)
+function kmFromLiters(liters, fuelNorm, coef) {
+    if (!fuelNorm || fuelNorm === 0 || coef === 0) return 0;
+    return (liters * 100) / (fuelNorm * coef);
+}
+
+// Перераховує км для ОДНОГО рядка за його поточним % від бажаних літрів.
+function recalcKmFromPct(type, fuelNorm, desiredFuel) {
+    var pct = parseFloat(document.getElementById(type.pct).value) || 0;
+    var litersForType = desiredFuel * pct / 100;
+    var km = kmFromLiters(litersForType, fuelNorm, type.coef);
+    document.getElementById(type.km).value = Math.round(km);
+}
+
+// Перераховує % для ОДНОГО рядка за його поточним км (після ручного вводу км).
+function recalcPctFromKm(type, fuelNorm, desiredFuel) {
+    var km = parseFloat(document.getElementById(type.km).value) || 0;
+    var litersForType = litersFromKm(km, fuelNorm, type.coef);
+    var pct = desiredFuel > 0 ? (litersForType / desiredFuel * 100) : 0;
+    document.getElementById(type.pct).value = Math.round(pct * 10) / 10;
+}
+
+// Викликається при зміні "Бажані літри" - км перераховуються під поточні %
+function onDesiredFuelChange() {
+    var fuelNorm = getFuelNorm();
+    var desiredFuel = parseFloat(document.getElementById('desiredFuel').value) || 0;
+    if (fuelNorm !== null) {
+        LITERS_ROAD_TYPES.forEach(function(type) {
+            recalcKmFromPct(type, fuelNorm, desiredFuel);
+        });
+    }
+    refreshLitersEndSpeedometer();
+    checkLitersPctSum();
+}
+
+// Викликається при зміні % для конкретного типу дороги - перераховує КМ цього типу
+function onLitersPctChange(index) {
+    var fuelNorm = getFuelNorm();
+    var desiredFuel = parseFloat(document.getElementById('desiredFuel').value) || 0;
+    if (fuelNorm !== null) {
+        recalcKmFromPct(LITERS_ROAD_TYPES[index], fuelNorm, desiredFuel);
+    }
+    refreshLitersEndSpeedometer();
+    checkLitersPctSum();
+}
+
+// Викликається при ручній зміні КМ для конкретного типу дороги - перераховує % цього типу
+function onLitersKmChange(index) {
+    var fuelNorm = getFuelNorm();
+    var desiredFuel = parseFloat(document.getElementById('desiredFuel').value) || 0;
+    if (fuelNorm !== null) {
+        recalcPctFromKm(LITERS_ROAD_TYPES[index], fuelNorm, desiredFuel);
+    }
+    refreshLitersEndSpeedometer();
+    checkLitersPctSum();
+}
+
+// Перевіряє, що сума 4 полів "%" дорівнює 100 (з невеликим допуском на
+// округлення), показує попередження, якщо ні.
+function checkLitersPctSum() {
+    var sum = LITERS_ROAD_TYPES.reduce(function(acc, type) {
+        return acc + (parseFloat(document.getElementById(type.pct).value) || 0);
+    }, 0);
+    sum = Math.round(sum * 10) / 10;
+
+    var el = document.getElementById('litersPctWarning');
+    if (Math.abs(sum - 100) < 0.1) {
+        el.innerText = 'Сума % використання доріг: ' + sum + '% ✓';
+        el.className = 'ok';
+    } else {
+        el.innerText = 'Сума % використання доріг: ' + sum + '% (має бути 100%)';
+        el.className = 'bad';
+    }
+    return Math.abs(sum - 100) < 0.1;
+}
+
+// Кінцевий спідометр = попередній спідометр (з першої вкладки) + сума км
+// по всіх 4 типах доріг. Лише показ, не редагується.
+function refreshLitersEndSpeedometer() {
+    var start = parseFloat(document.getElementById('startSpeedometer').value);
+    var sumKm = LITERS_ROAD_TYPES.reduce(function(acc, type) {
+        return acc + (parseFloat(document.getElementById(type.km).value) || 0);
+    }, 0);
+
+    var el = document.getElementById('litersEndSpeedometer');
+    if (isNaN(start)) {
+        el.innerText = '— спершу вкажіть "Спідометр попередній" на першій вкладці —';
+    } else {
+        el.innerText = (start + sumKm) + ' км';
+    }
+}
+
+// Кнопка "Згоден" - переносить розраховані значення на першу вкладку
+function confirmLiters() {
+    var fuelNorm = getFuelNorm();
+    if (fuelNorm === null) {
+        alert('Спочатку оберіть марку ТЗ на вкладці "СМС показників"');
+        return;
+    }
+
+    var start = parseFloat(document.getElementById('startSpeedometer').value);
+    if (isNaN(start)) {
+        alert('Спочатку вкажіть "Спідометр попередній" на вкладці "СМС показників"');
+        return;
+    }
+
+    var desiredFuel = parseFloat(document.getElementById('desiredFuel').value) || 0;
+    if (desiredFuel <= 0) {
+        alert('Вкажіть бажані літри (більше нуля)');
+        return;
+    }
+
+    if (!checkLitersPctSum()) {
+        alert('Сума % використання доріг має дорівнювати 100% - виправте перед перенесенням');
+        return;
+    }
+
+    var sumKm = LITERS_ROAD_TYPES.reduce(function(acc, type) {
+        return acc + (parseFloat(document.getElementById(type.km).value) || 0);
+    }, 0);
+
+    document.getElementById('highwayDistance').value = document.getElementById('litersHighwayKm').value;
+    document.getElementById('streetDistance').value = document.getElementById('litersStreetKm').value;
+    document.getElementById('cityDistance').value = document.getElementById('litersCityKm').value;
+    document.getElementById('offroadDistance').value = document.getElementById('litersOffroadKm').value;
+    document.getElementById('endSpeedometer').value = start + sumKm;
+
+    switchTab('fuel');
+    alert('Дані перенесено. Перевірте значення і натисніть "Результат".');
 }
 
 // Останній обраховане значення норми - потрібне функціям "Дорожнього
