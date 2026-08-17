@@ -472,6 +472,11 @@
 <div id="litersPctWarning"></div>
 
 <div class="field-row">
+    <label>📏 Загальна відстань</label>
+    <div id="litersTotalDistance" class="liters-readonly">—</div>
+</div>
+
+<div class="field-row">
     <label>🏁 Кінцевий спідометр (розрахунок)</label>
     <div id="litersEndSpeedometer" class="liters-readonly">—</div>
 </div>
@@ -769,6 +774,11 @@ function checkLitersPctSum() {
     return Math.abs(sum - 100) < 0.1;
 }
 
+// Загальна відстань = сума км по всіх 4 типах доріг. Лише показ.
+function refreshLitersTotalDistance(sumKm) {
+    document.getElementById('litersTotalDistance').innerText = sumKm + ' км';
+}
+
 // Кінцевий спідометр = попередній спідометр (з першої вкладки) + сума км
 // по всіх 4 типах доріг. Лише показ, не редагується.
 function refreshLitersEndSpeedometer() {
@@ -776,6 +786,8 @@ function refreshLitersEndSpeedometer() {
     var sumKm = LITERS_ROAD_TYPES.reduce(function(acc, type) {
         return acc + (parseFloat(document.getElementById(type.km).value) || 0);
     }, 0);
+
+    refreshLitersTotalDistance(sumKm);
 
     var el = document.getElementById('litersEndSpeedometer');
     if (isNaN(start)) {
