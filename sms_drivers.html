@@ -382,12 +382,10 @@
 </div>
 
 <script>
-// Дата за замовчуванням: поточна + 1 день
+// Дата за замовчуванням: поточна (сьогодні)
     var now = new Date();
     var timeZoneOffset = 120; // +02:00 Київ
     var kievTime = new Date(now.getTime() + (timeZoneOffset*60*1000));
-    // Додаємо один день
-    kievTime.setDate(kievTime.getDate() + 1);
     var formattedDate = kievTime.toISOString().substr(0,10);
     document.getElementById('date').value = formattedDate;
 // Підвантаження збережених даних
