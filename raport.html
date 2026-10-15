@@ -446,11 +446,11 @@ button.signal-btn:active {
 
     <div class="report-type">
         <label>
-            <input type="radio" name="reportType" value="application" checked onchange="changeReportType()">
+            <input type="radio" name="reportType" value="application" onchange="changeReportType()">
             🎯 Рапорт по застосуванню
         </label>
         <label>
-            <input type="radio" name="reportType" value="simple" onchange="changeReportType()">
+            <input type="radio" name="reportType" value="simple" checked onchange="changeReportType()">
             🏠 Простий рапорт
         </label>
     </div>
@@ -478,7 +478,7 @@ button.signal-btn:active {
             <button class="secondary" onclick="closeFormatterModal()" style="flex:none;width:36px;height:36px;padding:0;font-size:18px;border-radius:6px">✕</button>
         </div>
 
-        <b>Вхідний текст (стовпчик):</b>
+        <b>Вхідний текст (СМС):</b>
         <textarea id="fmtInput" style="height:200px;font-size:13px;line-height:1.6" placeholder="Дата: 15.05.2026
 Час: 05:58
 № цілі: 8137
@@ -486,30 +486,17 @@ button.signal-btn:active {
 Н.П.: МИХАЙЛІВКА
 ..."></textarea>
 
-        <b style="margin-top:4px">Роздільник:</b>
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
-            <input id="fmtSep" type="text" value=" " maxlength="10"
-                style="width:80px;padding:8px 10px;font-size:15px;border-radius:6px;border:2px solid var(--primary-color);background:#1e1e1e;color:#fff;font-family:monospace">
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <button onclick="fmtSetSep(' ')" class="fmt-preset" style="flex:none;padding:6px 12px;font-size:12px">пробіл</button>
-                <button onclick="fmtSetSep(' | ')" class="fmt-preset" style="flex:none;padding:6px 12px;font-size:12px">|</button>
-                <button onclick="fmtSetSep(', ')" class="fmt-preset" style="flex:none;padding:6px 12px;font-size:12px">кома</button>
-                <button onclick="fmtSetSep(' / ')" class="fmt-preset" style="flex:none;padding:6px 12px;font-size:12px">слеш</button>
-            </div>
-        </div>
-
         <div style="display:flex;gap:8px;margin-bottom:12px">
             <button onclick="fmtConvert()" style="background:#00897b">▶ Конвертувати</button>
             <button onclick="fmtClear()" class="secondary" style="background:#555">🗑 Очистити</button>
         </div>
 
-        <div id="fmtResult" style="display:none;background:#1e1e1e;border:2px solid #00897b;border-radius:8px;padding:12px;font-size:13px;line-height:1.6;word-break:break-word;color:#68b030;margin-bottom:10px;min-height:50px"></div>
+        <div id="fmtResult" style="display:none;white-space:pre-wrap;background:#1e1e1e;border:2px solid #00897b;border-radius:8px;padding:12px;font-size:13px;line-height:1.6;word-break:break-word;color:#68b030;margin-bottom:10px;min-height:50px"></div>
 
         <div id="fmtStatus" style="font-size:12px;color:#aaa;text-align:center;height:16px;margin-bottom:8px"></div>
 
         <div style="display:flex;gap:8px">
             <button id="fmtInsertBtn" onclick="fmtInsertToRaport()" style="display:none;background:#4caf50">✅ Вставити в рапорт</button>
-            <button id="fmtCopyBtn" onclick="fmtCopyText()" style="display:none;background:#2196f3">⧉ Копіювати</button>
         </div>
     </div>
 </div>
@@ -583,7 +570,7 @@ const text1 = document.getElementById('text1');
 const label1 = document.getElementById('label1');
 
 // Глобальна змінна для типу рапорту
-let currentReportType = 'application';
+let currentReportType = 'simple';
 
 // Функція зміни типу рапорту
 function changeReportType() {
@@ -1306,9 +1293,139 @@ function fmtSetSep(val) {
     document.getElementById('fmtSep').value = val;
 }
 
+const FMT_RANKS = {
+    'солд.': 'солдат', 'ст. солд.': 'старший солдат', 'гл. солд.': 'головний солдат',
+    'мол. с-нт': 'молодший сержант', 'с-нт': 'сержант', 'ст. с-нт': 'старший сержант',
+    'гол. с-нт': 'головний сержант', 'гл. с-нт': 'головний сержант',
+    'ст-на': 'старшина', 'ст. ст-на': 'старший старшина', 'гол. ст-на': 'головний старшина',
+    'мол. л-нт': 'молодший лейтенант', 'л-нт': 'лейтенант', 'ст. л-нт': 'старший лейтенант',
+    'к-н': 'капітан', 'м-р': 'майор', 'п/п-к': 'підполковник', 'п-к': 'полковник'
+};
+
+function fmtRank(txt) {
+    // знайти звання на початку (найдовший збіг)
+    const keys = Object.keys(FMT_RANKS).sort((a, b) => b.length - a.length);
+    const low = txt.toLowerCase();
+    for (const k of keys) {
+        if (low.startsWith(k + ' ') || low === k) {
+            const rest = txt.slice(k.length).trim();
+            return (FMT_RANKS[k] + (rest ? ' ' + rest : '')).trim();
+        }
+    }
+    return null;
+}
+
+function fmtTitle(str) {
+    return str.toLowerCase().replace(/(^|[\s\-'’])(\p{L})/gu, (m, p, c) => p + c.toUpperCase());
+}
+
+function fmtOblast(o) {
+    o = o.trim();
+    const g = o.replace(/ська$/i, 'ської').replace(/цька$/i, 'цької').replace(/зька$/i, 'зької');
+    return g + ' обл.';
+}
+
+function fmtCaliber(c) {
+    return c.replace(/(\d)\s*[хxХX]\s*(\d)/g, '$1×$2').replace(/(\d)\.(\d)/g, '$1,$2');
+}
+
+function fmtParseBlock(lines) {
+    const f = {}; const ammo = []; const warn = [];
+    for (const ln of lines) {
+        let m = ln.match(/^Набій\s+(.+?)\s*мм\s+(?:\(.*?\)\s*)?(.+?)\s*[-–—]\s*(\d+)\s*$/i);
+        if (m) { ammo.push({ cal: fmtCaliber(m[1]), type: m[2].trim(), n: parseInt(m[3], 10) }); continue; }
+        m = ln.match(/^([^:]{1,40}):\s*(.*)$/);
+        if (m) { f[m[1].trim().toLowerCase()] = m[2].trim(); continue; }
+        warn.push(ln);
+    }
+
+    // Опис
+    let az = '', dist = '', course = '', target = '', crew = [];
+    const desc = (f['опис'] || '').split(',').map(x => x.trim()).filter(Boolean);
+    for (const part of desc) {
+        let m;
+        if ((m = part.match(/^А\s*[-–]\s*(\d+)/i))) az = m[1];
+        else if ((m = part.match(/^Д\s*[-–]\s*(\d+)/i))) dist = m[1];
+        else if ((m = part.match(/^К\s*[-–]\s*(\d+)/i))) course = m[1];
+        else if ((m = part.match(/^обстріляно\s+(\d+)\s+(.+)$/i))) {
+            let t = m[2].trim();
+            t = t.replace(/^(\S*БПЛА)\s+([^«»\s].*)$/i, '$1 «$2»');
+            target = m[1] + ' ' + t;
+        }
+        else {
+            const r = fmtRank(part);
+            if (r) crew.push(r); else warn.push(part);
+        }
+    }
+
+    // Місце
+    let place = '';
+    if (f['н.п.']) place = 'н.п. ' + fmtTitle(f['н.п.']);
+    if (f['обл.']) place += (place ? ' ' : '') + fmtOblast(f['обл.']);
+
+    // Підрозділ + позивний
+    let unit = f['підрозділ'] || '';
+    let call = f['позивний'] || '';
+    let callTxt = '';
+    if (call) {
+        const m = call.match(/^(\S+)\s+(.+)$/);
+        callTxt = m ? m[1] + ' «' + m[2] + '»' : '«' + call + '»';
+    }
+    const who = [callTxt, unit].filter(Boolean).join(' ');
+
+    // Зброя (може бути кілька через кому)
+    const weaponList = (f['зброя'] || '').split(',').map(x => x.trim()).filter(Boolean).map(w => {
+        let prep = 'із';
+        const pm = w.match(/^(із|зі|з)\s+(.*)$/i);
+        if (pm) { prep = pm[1].toLowerCase(); w = pm[2]; }
+        let cal = '';
+        const wm = w.match(/^(.*?)\s+(\d+(?:[.,]\d+)?)$/);
+        if (wm) { w = wm[1]; cal = fmtCaliber(wm[2]); }
+        return prep + ' ' + w + (cal ? ' калібру ' + cal + ' мм' : '');
+    });
+    const weaponTxt = weaponList.length > 1
+        ? weaponList.slice(0, -1).join(', ') + ' та ' + weaponList[weaponList.length - 1]
+        : (weaponList[0] || '');
+
+    // Результат
+    let res = '';
+    const rv = (f['результат'] || '').toLowerCase();
+    if (rv) {
+        if (/не\s*знищ/.test(rv)) res = 'Ціль не знищено.';
+        else if (/знищ/.test(rv)) res = 'Ціль знищено.';
+        else res = 'Результат: ' + f['результат'] + '.';
+    }
+
+    // Перший абзац
+    let p1 = 'Доповідаю, що ' + (f['дата'] || '') + (f['час'] ? ' о ' + f['час'] : '');
+    if (place) p1 += ' в районі ' + place;
+    if (who) p1 += ' ' + who;
+    if (crew.length) p1 += ' у складі: ' + crew.join(', ');
+    if (weaponTxt) p1 += ' ' + weaponTxt;
+    p1 += ' обстріляла' + (target ? ' ' + target : '');
+    if (f['№ цілі']) p1 += ' (ціль № ' + f['№ цілі'] + ')';
+    const prm = [];
+    if (az) prm.push('азимут ' + az);
+    if (dist) prm.push('дальність ' + dist + ' м');
+    if (course) prm.push('курс ' + course);
+    if (f['висота']) prm.push('висота ' + f['висота'] + ' м');
+    if (prm.length) p1 += ' з параметрами: ' + prm.join(', ');
+    p1 += '.' + (res ? ' ' + res : '');
+
+    // Другий абзац — БК (групування за калібром)
+    const groups = {};
+    for (const a of ammo) (groups[a.cal] = groups[a.cal] || []).push(a);
+    const p2 = Object.keys(groups).map(cal => {
+        const arr = groups[cal];
+        const total = arr.reduce((s, a) => s + a.n, 0);
+        return 'Витрачено боєприпасів ' + cal + ' мм: ' + arr.map(a => a.type + ' - ' + a.n).join(', ') + '. Усього ' + total + ' набоїв.';
+    });
+
+    return { text: [p1].concat(p2).join('\n'), warn };
+}
+
 function fmtConvert() {
     const raw = document.getElementById('fmtInput').value;
-    const sep = document.getElementById('fmtSep').value;
 
     if (!raw.trim()) {
         fmtStatus('⚠ Введіть текст', '#e57373');
@@ -1316,14 +1433,24 @@ function fmtConvert() {
     }
 
     const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    const result = lines.join(sep);
+
+    // кілька СМС в одному полі — кожне починається з "Дата:"
+    const blocks = [];
+    for (const ln of lines) {
+        if (/^Дата\s*:/i.test(ln) || blocks.length === 0) blocks.push([]);
+        blocks[blocks.length - 1].push(ln);
+    }
+
+    const parsed = blocks.map(fmtParseBlock);
+    const result = parsed.map(x => x.text).join('\n\n');
+    const warn = parsed.flatMap(x => x.warn);
 
     const box = document.getElementById('fmtResult');
     box.textContent = result;
     box.style.display = 'block';
     document.getElementById('fmtInsertBtn').style.display = 'block';
-    document.getElementById('fmtCopyBtn').style.display = 'block';
-    fmtStatus(`✓ ${lines.length} рядків → 1 рядок`, '#68b030');
+    if (warn.length) fmtStatus('⚠ Не розпізнано: ' + warn.join('; '), '#e57373');
+    else fmtStatus(`✓ Готово (СМС: ${blocks.length})`, '#68b030');
 }
 
 function fmtClear() {
@@ -1331,7 +1458,6 @@ function fmtClear() {
     document.getElementById('fmtResult').style.display = 'none';
     document.getElementById('fmtResult').textContent = '';
     document.getElementById('fmtInsertBtn').style.display = 'none';
-    document.getElementById('fmtCopyBtn').style.display = 'none';
     fmtStatus('', '');
 }
 
@@ -1344,21 +1470,12 @@ function fmtInsertToRaport() {
     // Якщо поле порожнє — просто вставити, якщо є текст — додати з нового рядка
     raportField.value = cur ? cur + '\n' + text : text;
 
+    const simpleRadio = document.querySelector('input[name="reportType"][value="simple"]');
+    if (simpleRadio && !simpleRadio.checked) { simpleRadio.checked = true; changeReportType(); }
+
     closeFormatterModal();
     raportField.focus();
     fmtStatus('', '');
-}
-
-async function fmtCopyText() {
-    const text = document.getElementById('fmtResult').textContent;
-    try {
-        await navigator.clipboard.writeText(text);
-    } catch(e) {
-        const ta = document.createElement('textarea');
-        ta.value = text; document.body.appendChild(ta); ta.select();
-        document.execCommand('copy'); document.body.removeChild(ta);
-    }
-    fmtStatus('✓ Скопійовано в буфер', '#68b030');
 }
 
 function fmtStatus(msg, color) {
